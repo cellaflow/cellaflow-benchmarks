@@ -18,6 +18,44 @@ Skyvern.
 
 Orders placed against one order id.
 
+## What each row is
+
+The agent's job in every scenario is the same: visit a checkout page and press
+**Place order** once. What differs is what goes wrong while it does that.
+
+**control, no crash.** One run, nothing interrupts it. Places one order. This row
+exists to prove the harness works — if it reads anything but `1`, every other
+number is a fault in the test and not a finding about Skyvern.
+
+**crash before the click, then retry.** The worker decides to click and the
+process is killed *before the click is sent*. Nothing irreversible happened: no
+order, no charge, nothing to deduplicate. A second run then retries the same
+task, which is what a worker pool or a supervisor does. **Correct is one order** —
+the retry should finish the job. Zero means the customer's request is silently
+lost: no error reaches them, nothing alerts, and nobody is ever shipped anything.
+
+**crash after the click, then retry.** The process is killed the instant the
+click lands, before anything records that it did. The order *is* placed. A second
+run retries the same task. **Correct is one order and a finished task.** Two
+orders means the customer paid twice; a stuck task means the run never completes
+and nobody knows the order went through.
+
+**action fails mid-batch.** Skyvern executes actions in batches. Here the order
+succeeds and a later action in the same batch fails. **Correct is one order** —
+the failure must not cause the successful actions to be repeated.
+
+**stranded task, operator reruns.** After a crash leaves a task unable to
+continue, someone starts a *fresh* run for the same order. This is what you do
+when a run is visibly stuck, and it is the only option when the task cannot be
+retried. **Correct is one order** — the new run should recognise the work is
+already done rather than redo it.
+
+**two processes, one task.** Two workers pick up the same task at the same
+moment. This models a redelivered queue message or a duplicate dispatch, which is
+ordinary in any worker pool. **Correct is one order** — only one of them should
+act.
+
+
 ## What the leases are
 
 Skyvern's step guard (`agent_functions.py:1542`) asks whether any step on the
@@ -54,7 +92,7 @@ touch the stranding at all, because it has no visibility into Skyvern's `steps`
 table. The row `durable_tools` is aimed at is *operator reruns*, and that is the
 row that does not move.
 
-## Row by row
+## What changed, and what did not
 
 **Crash before the click — the stranding is gone.** Skyvern leaves the task
 permanently unretryable and the customer never gets their order: `0`. With the
