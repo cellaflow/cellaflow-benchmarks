@@ -9,12 +9,18 @@ by a canned planner. Nothing else is substituted. Skyvern v1.0.53, commit
   scenario                              orders  correct   outcome
   --------------------------------------------------------------------------
   control, no crash                          1        1   correct
-  crash before the click, then retry         0        0   task stranded
+  crash before the click, then retry         0        1   task stranded
   crash after the click, then retry          1        1   task stranded
   action fails mid-batch                     1        1   step completes, no retry
   stranded task, operator reruns             2        1   fresh run re-orders
   two processes, one task                    2        1   both processes act
 ```
+
+Orders placed against one order id. `correct` is what the customer should end up
+with: exactly one order, and the work finished. Row two reads `0` because the
+stranded task means the order is never placed at all -- the failure shows in the
+count. Row three reads `1` because the order was placed correctly; its failure
+is that the task can never finish, which the outcome column carries instead.
 
 Three findings.
 
@@ -98,8 +104,7 @@ granularity. The three findings above sit a layer in from it.
 ## Run it
 
 ```bash
-docker run -d --name sk-pg -e POSTGRES_USER=skyvern -e POSTGRES_PASSWORD=skyvern \
-  -e POSTGRES_DB=skyvern -p 5440:5432 postgres:14-alpine
+docker compose up -d --wait
 
 git clone https://github.com/Skyvern-AI/skyvern && (cd skyvern && git checkout d23ceb4)
 DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@localhost:5440/skyvern \

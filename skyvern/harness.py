@@ -104,7 +104,7 @@ def sc_race() -> tuple[int, str]:
 
 SCENARIOS = [
     ("control, no crash",                 1, sc_control),
-    ("crash before the click, then retry", 0, lambda: sc_crash_then_retry("before_click")),
+    ("crash before the click, then retry", 1, lambda: sc_crash_then_retry("before_click")),
     ("crash after the click, then retry",  1, lambda: sc_crash_then_retry("after_click")),
     ("action fails mid-batch",             1, sc_batch_fail),
     ("stranded task, operator reruns",     1, sc_new_task_after_deadlock),
