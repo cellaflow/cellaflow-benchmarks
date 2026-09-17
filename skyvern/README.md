@@ -1,120 +1,145 @@
-> **CORRECTED 2026-09-17 — do not quote this file's table.** Running the real
-> Skyvern agent loop (see [`tier2/`](tier2/)) shows the prediction below is
-> wrong. A crashed run does **not** buy twice: a running-step guard
-> (`agent_functions.py:1542`) blocks the retry, so the order is placed once and
-> the **task deadlocks permanently**. Skyvern is better on duplicates than this
-> model implied and has a failure this model did not contain. `tier2/` is the
-> measurement; this file is kept for the method and the correction.
+# A crashed Skyvern run strands the task, and the way out of that is what orders twice
 
-# A Skyvern run that dies mid-checkout buys the thing twice
+Measured against **real Skyvern** — real `execute_step`, real Playwright, real
+Postgres, real retry chain. The LLM that picks which element to click is replaced
+by a canned planner. Nothing else is substituted. Skyvern v1.0.53, commit
+`d23ceb4`.
 
-Skyvern validates an `idempotency_key` — carefully, with bounds checks and its own
-test file. It dedups **the HTTP request that creates a workflow run**:
+```
+  scenario                              orders  correct   outcome
+  --------------------------------------------------------------------------
+  control, no crash                          1        1   correct
+  crash before the click, then retry         0        0   task stranded
+  crash after the click, then retry          1        1   task stranded
+  action fails mid-batch                     1        1   step completes, no retry
+  stranded task, operator reruns             2        1   fresh run re-orders
+  two processes, one task                    2        1   both processes act
+```
+
+Three findings.
+
+## 1. Any crash during a step strands the task
+
+`agent_functions.py:1542` gates every step on whether another is already running:
 
 ```python
-# skyvern/forge/sdk/routes/agent_protocol.py:998
-digest = calculate_sha256(f"create_workflow\0{current_org.organization_id}\0{idempotency_key}")
+steps = await app.DATABASE.tasks.get_task_steps(task_id=task.task_id, ...)
+has_no_running_steps = not any(step.status == StepStatus.running for step in steps)
 ```
 
-That is the right thing to do and it is done well. It says nothing about the
-browser actions *inside* the run, which is where the money moves.
+A claim with **no lease, no heartbeat and no expiry**. `StepStatus.running` is
+written in exactly one place (`agent.py:3819`), and nothing reaps a stale one.
+
+A process that dies mid-step leaves its step `running` permanently. The retry is
+refused with `StepUnableToExecuteError: ['another_step_is_running_for_task:...']`.
+Postgres afterwards:
 
 ```
-  arm               control  crash: during  crash: after record    5 race
-  -----------------------------------------------------------------------
-  skyvern-shaped          1              2                    2         5
-  cellaflow               1              2                    1         1
+stp_...100 | running | retry_index 0     the process that died
+stp_...762 | created | retry_index 1     the retry, blocked
+task       | running
 ```
 
-Orders placed against one order id. `1` is correct in every cell.
+**This is not about side effects.** Crashing *before* the click places no order
+and strands the task identically. Any process death during a step is enough.
 
-## The ordering, from the source
+## 2. The way out of a stranded task is what duplicates the order
 
-`skyvern/forge/agent.py`, commit `d23ceb4`, v1.0.53:
+The finding that matters, and it is the two rows read together.
 
-```python
-4288:  results = await ActionHandler.handle_action(...)   # the click happens
-4299:  detailed_agent_step_output.actions_and_results[action_idx] = (action, results)
-       # in-memory only; the step's output is persisted after the action loop
-```
+A stranded task cannot be retried — by Skyvern or by anyone. The only route to
+getting the customer their order is a new run, which is what an operator or the
+customer will do.
 
-No `create_action` precedes `handle_action` on this path. There is one at
-`4152`, but that is the internal-refresh branch and it `break`s before reaching
-the dispatch above.
+A new task starts with an **empty action history**. It navigates to the checkout
+page, sees the button, clicks it. **Two orders.**
 
-So between a click landing on a page and the step being written, there is a
-window — and it is not a narrow one. It spans every remaining action in the
-batch, the inter-action waits, and post-action artifact recording. A process
-that dies anywhere inside it leaves the external world moved with nothing
-durable saying so, and Skyvern's own retry (`step.retry_index`,
-`max_retries_per_step`, `agent.py:8548-8626`) runs the step again.
+What prevents a repeat *within* a task is the action history Skyvern puts in the
+planner's prompt. That history does not cross tasks, so the remediation for
+finding 1 removes the thing that was preventing finding 2.
 
-## Reading the two crash columns
+## 3. The running-step check is read-then-act, and it races
 
-**`crash: during` is a tie, and we are not claiming otherwise.** Dying between
-the action and *any* durable record of it is unsurvivable for everything here,
-ours included. The click is not a database write, so no lock, lease or
-transaction can bracket it. Making the record transactional makes it strictly
-worse: the write rolls back and the purchase stands. Both arms buy twice.
+Two processes on one unclaimed task both read "no running steps", both proceed,
+both click. **Two orders.** There is no lock between the check at `:1542` and the
+`running` write at `agent.py:3819`.
 
-**`crash: after record` is the column that separates**, and the difference is
-*when the operation becomes durable*, not whether the crash is survivable. A
-leased tool records the operation as part of performing it, so its window is one
-RPC. Skyvern's window is the rest of the action loop. Same failure, different
-exposure.
+This models a redelivered queue message, or two workers claiming one task.
 
-**`5 race`** is a redelivered webhook or a double-submitted task — the case the
-create-time idempotency key covers at the API boundary and not inside the run.
+---
 
-## What this is not
+## What Skyvern does guard, measured
 
-**It does not run Skyvern.** Skyvern's unit of work is an LLM deciding what to
-click: nondeterministic, needs API keys and a browser, not reproducible by a
-reader. What runs here is the *ordering*, against a fake checkout endpoint.
+Tested and found sound, which is worth stating precisely because the rows above
+are the exceptions:
 
-That makes this a statement about the ordering rather than a measurement of
-Skyvern end to end. The ordering is cited above with line numbers so it can be
-checked in ten seconds. **If it is wrong, the result is worthless, and we would
-genuinely like to be told.**
+- **Repeat actions within a task.** The planner's prompt carries prior actions
+  and their results — `{"action_type": "click", "status": "completed",
+  "element_id": "AAAC"}` with `{"result": {"success": true}}` — alongside the
+  changed URL. A model reading that will not re-click. The defence holds for
+  every scenario inside a single task.
+- **Completed tasks.** Cannot be re-run: `invalid_task_status:completed`.
+- **A failed action mid-batch.** Does not force a step retry. The step completes
+  and execution continues (`stop_execution_on_failure: False`), so earlier
+  successful actions in the batch are not repeated.
+- **Run creation.** The `create_workflow` idempotency key dedups the request that
+  starts a run (`routes/agent_protocol.py:998`).
 
-It is also not a performance benchmark. The leased arm is slower — it adds a
-round trip per guarded action. The axis here is correctness only.
+## What Skyvern shipped on 2026-09-15
+
+`alembic/versions/...eee46e1b1dbf_add_durable_workflow_terminal_side_effect_progress.py`
+adds `interim_side_effects_progress` and `final_side_effects_progress` to
+`workflow_run_attempts`, tracking `webhook_delivery_attempted` across attempts so
+a retried run does not re-send its completion webhook.
+
+One side effect, made durable across retries, at workflow-run-attempt
+granularity. The three findings above sit a layer in from it.
 
 ## Run it
 
 ```bash
-docker compose up -d          # only the cellaflow arm needs this
-pip install -r requirements.txt
-python harness.py --writers 5
+docker run -d --name sk-pg -e POSTGRES_USER=skyvern -e POSTGRES_PASSWORD=skyvern \
+  -e POSTGRES_DB=skyvern -p 5440:5432 postgres:14-alpine
+
+git clone https://github.com/Skyvern-AI/skyvern && (cd skyvern && git checkout d23ceb4)
+DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@localhost:5440/skyvern \
+  alembic -c skyvern/alembic.ini upgrade head
+
+python -m venv venv && ./venv/bin/pip install "./skyvern[server]"
+./venv/bin/playwright install chromium
+
+./venv/bin/python checkout_server.py 8899 &
+./venv/bin/python harness.py
 ```
 
-The control column is load-bearing: one worker, no crash, no race, and it must
-read `1` for every arm. If it does not, every other number is a harness bug and
-the run says so and exits non-zero.
+No API key. No LLM spend. Deterministic.
 
-The ledger adjudicates. `place_order` appends to `ledger.jsonl` and fsyncs
-*before* returning, so an arm cannot avoid a count by dying before it reports
-one. No arm reports its own success.
+The control row is load-bearing: one run, no crash, one order. If it reads
+anything else, every other row is a harness fault and the run says so.
 
-## What would change these numbers
+Orders are counted from `ledger.jsonl`, which the checkout server appends and
+fsyncs inside the POST handler, before responding. A run cannot avoid a count by
+dying after the order.
 
-- A `create_action` call before `handle_action`, giving a retry something to
-  observe. That closes `crash: after record` without needing anything external.
-- An action-level idempotency key derived from the action's own content, so a
-  replayed step recognises a click it has already made.
-- Either would move the `skyvern-shaped` row and we would update this file.
+**The one Skyvern setting changed** is `ALLOWED_HOSTS=["127.0.0.1"]`, because
+Skyvern blocks loopback navigation as an SSRF guard (`webeye/navigation.py:61`)
+and the checkout page is local. It uses the allow-list Skyvern already provides
+and changes nothing about action execution, persistence or retry.
 
-## The question we cannot answer from outside
+## Scope
 
-Has this actually bitten anyone? The failure is quiet — a duplicate order, found
-later by a customer rather than by an alert — so we cannot tell low incidence
-from low visibility. If you run Skyvern against anything that charges a card or
-submits a form, we would like to hear which it is.
+- The crash is injected at a chosen boundary. A real crash lands wherever it
+  lands; finding 1 holds for any of them, since it needs only a `running` step.
+- Finding 3 was produced by running two processes against one task directly.
+  Whether Skyvern's scheduler can deliver a task twice is a question about their
+  infrastructure, not their agent loop.
+- Whether stranded tasks get noticed and cleared in a real deployment is not
+  visible from outside, and it decides whether finding 2 is routine or rare.
 
 ---
 
-Built with [CellaFlow](https://github.com/cellaflow/cellaflow-sdks) — an
-idempotency layer for AI agent tool calls. The
-[crash benchmark](https://github.com/cellaflow/cellaflow-sdks/tree/main/examples/crash_benchmark)
-runs the same method against four guards and six failures, including the rows
-where CellaFlow ties no guard at all.
+Built alongside [CellaFlow](https://github.com/cellaflow/cellaflow-sdks), which
+leases tool calls so the record of an operation outlives the process performing
+it. The [crash benchmark](https://github.com/cellaflow/cellaflow-sdks/tree/main/examples/crash_benchmark)
+measures the same class of failure across four guards, including the rows where a
+lease buys nothing.
