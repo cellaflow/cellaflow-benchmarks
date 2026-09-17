@@ -1,0 +1,4 @@
+ledger.jsonl
+.steps/
+venv/
+__pycache__/
