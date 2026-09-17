@@ -38,6 +38,8 @@ CHECKOUT_URL = os.environ["BENCH_CHECKOUT_URL"]
 DIE_AT = os.environ.get("BENCH_DIE_AT", "no")     # no | after_click
 ARM = os.environ.get("BENCH_ARM", "skyvern")      # skyvern | cellaflow
 DUMP_PROMPT = os.environ.get("BENCH_DUMP_PROMPT") == "1"
+PLAN = os.environ.get("BENCH_PLAN", "single")   # single | batch_then_fail
+PLANNER = os.environ.get("BENCH_PLANNER", "memo")  # memo | stateless
 
 
 # ---------------------------------------------------------------------------
@@ -62,7 +64,7 @@ async def canned_llm_api_handler(prompt: str = "", prompt_name: str = "", **kwar
     _calls["n"] += 1
 
     if DUMP_PROMPT and "action" in prompt_name:
-        PROMPT_DUMP.write_text(f"PROMPT_NAME={prompt_name}\n\n{prompt}")
+        (HERE / f".prompt_call{_calls['n']}.txt").write_text(f"PROMPT_NAME={prompt_name}\n\n{prompt}")
         print(f"[driver] dumped prompt '{prompt_name}' ({len(prompt)} chars)", flush=True)
 
     if "action" not in prompt_name:
@@ -75,14 +77,37 @@ async def canned_llm_api_handler(prompt: str = "", prompt_name: str = "", **kwar
         return {"actions": [{"action_type": "COMPLETE", "reasoning": "canned: element not found",
                              "confidence_float": 1.0, "intention": "stop"}]}
 
-    if _calls["n"] <= 1 or not _clicked["done"]:
-        return {"actions": [{
+    click = {
+        "action_type": "CLICK",
+        "element_id": element_id,
+        "reasoning": "canned planner: click the single button on the page",
+        "confidence_float": 1.0,
+        "intention": "place the order",
+    }
+
+    if PLAN == "batch_then_fail" and not _clicked["done"]:
+        # A batch whose LAST action fails after the order already went through.
+        # This is the duplicate path that needs no crash: the step fails, Skyvern
+        # retries the whole step, and the only thing standing between that and a
+        # second order is whether the re-plan notices the first one.
+        return {"actions": [click, {
             "action_type": "CLICK",
-            "element_id": element_id,
-            "reasoning": "canned planner: click the single button on the page",
+            "element_id": "ZZZZ-does-not-exist",
+            "reasoning": "canned planner: deliberate failure to force a step retry",
             "confidence_float": 1.0,
-            "intention": "place the order",
+            "intention": "force retry",
         }]}
+
+    if PLANNER == "stateless":
+        # A real LLM has no memory between calls -- it knows only what the prompt
+        # tells it. If Skyvern's prompt carries the action history, a model can
+        # tell it already clicked; if it does not, the only signal is the page.
+        # Clicking whenever the button is visible is what a model with no other
+        # information would do, so this isolates what Skyvern actually supplies.
+        return {"actions": [click]}
+
+    if _calls["n"] <= 1 or not _clicked["done"]:
+        return {"actions": [click]}
 
     return {"actions": [{"action_type": "COMPLETE", "reasoning": "canned: order placed",
                          "confidence_float": 1.0, "intention": "finish"}]}
@@ -107,6 +132,9 @@ def install_crash_after_click() -> None:
     original = ActionHandler.handle_action
 
     async def wrapped(*args, **kwargs):
+        if DIE_AT == "before_click":
+            print("[driver] dying BEFORE handle_action runs", flush=True)
+            os._exit(137)
         result = await original(*args, **kwargs)
         _clicked["done"] = True
         if DIE_AT == "after_click":
@@ -181,6 +209,11 @@ async def main() -> int:
 
     print(f"[driver] IDS org={org.organization_id} task={task.task_id} step={step.step_id}", flush=True)
 
+    if os.environ.get("BENCH_SETUP_ONLY") == "1":
+        # Leave a running task with a `created` step and execute nothing, so two
+        # processes can be raced against the same unclaimed position.
+        return 0
+
     await _execute(app, org, task, step)
     return 0
 
@@ -204,8 +237,18 @@ async def _execute(app, org, task, step) -> None:
     from skyvern.forge.agent import ForgeAgent
 
     agent = ForgeAgent()
-    await agent.execute_step(organization=org, task=task, step=step)
-    print("[driver] execute_step returned", flush=True)
+    # execute_step returns (step, output, next_step). Skyvern's server drives the
+    # chain; a bare single call would stop before any retry, so the loop here is
+    # what makes its own retry path actually run.
+    hops = 0
+    while step is not None and hops < 8:
+        hops += 1
+        _, _, next_step = await agent.execute_step(organization=org, task=task, step=step)
+        print(f"[driver] hop={hops} step={step.step_id} retry_index={step.retry_index} "
+              f"-> next={(next_step.step_id + ' retry_index=' + str(next_step.retry_index)) if next_step else None}",
+              flush=True)
+        step = next_step
+    print("[driver] chain finished", flush=True)
 
 
 if __name__ == "__main__":
