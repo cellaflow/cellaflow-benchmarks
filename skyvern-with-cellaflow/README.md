@@ -151,10 +151,12 @@ clearing its step and lets the retry proceed at all. The operation leases then
 supply what a lock cannot: `reserve` and `charge` return their *stored results*
 rather than being performed again.
 
-A distributed lock gets you the first half. It would unstick the task and then
-re-run the batch from the top, because a lock records who is holding it and not
-what the work returned — `2, 2, 1`. The difference between that and `1, 1, 1` is
-durable results, which is the one thing a leases table in Postgres does not have.
+A distributed lock supplies only the first half. It would unstick the task and
+then re-run the batch from the top, because a lock records who is holding it and
+not what the work returned. That reasoning is not measured here — no lock arm
+was built — but it is the whole distinction the row exists to draw: clearing a
+dead holder's claim is mutual exclusion, and knowing that `charge` already
+returned is not.
 
 The batch shape is deliberate. `step.output` is written when a step *ends*, so
 three separate steps would leave a populated action history and the retry would
@@ -162,6 +164,53 @@ correctly skip the first two on its own. Only a crash inside a single batch
 loses it — which is also why the planner here reads Skyvern's action history and
 skips anything already listed: on this crash it comes back empty, and the result
 is about Skyvern rather than about a stub ignoring what it was given.
+
+## The record survives. The planner is not shown it.
+
+This is the cheapest thing on this page to fix, and it changes more than one row.
+
+Skyvern persists an action **inside** `handle_action`, before that function
+returns (`webeye/actions/handler.py:4925`):
+
+```python
+action.finished_at = naive_utc_now()
+persisted_action = await app.DATABASE.workflow_params.create_action(...)
+action.action_id = persisted_action.action_id
+return results
+```
+
+So a crash immediately after a click still leaves a durable row. Confirmed in
+Postgres after exactly that crash:
+
+```
+actions:  click | completed | AAAC        <- survived
+steps:    stp_…500 | running | output=∅   <- never written
+```
+
+But the history the planner is given comes from step outputs, not from those
+rows (`services/action_service.py:29`):
+
+```python
+for window_step in window_steps:
+    if window_step.output and window_step.output.actions_and_results:
+```
+
+`step.output` is written when a step *ends*. A crash mid-step never writes it.
+So the retry's first prompt reads:
+
+```
+Action history from previous steps:
+[]
+```
+
+**Skyvern knows the click happened and does not tell the planner.** The model is
+asked to decide what to do next with no record of what it already did, on a page
+that still shows the button — and a model with no other information clicks it.
+
+Sourcing that history from the `actions` rows, which already exist and already
+carry `status` and `element_id`, would close it without new infrastructure. It
+would not fix findings 1 or 3, which are about ownership rather than memory. It
+would change the two rows that are about memory.
 
 ## What this does not claim
 
