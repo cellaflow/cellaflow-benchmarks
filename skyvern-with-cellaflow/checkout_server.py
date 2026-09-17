@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
-"""A one-button checkout page. The POST handler is the irreversible effect.
+"""A checkout page. The POST handlers are the irreversible effects.
 
-The order id travels in the URL, so the ledger records which order each POST
-was for rather than trusting a value the server was started with.
+Two pages. The default is one button posting to /place-order, which every
+published scenario uses and which must not change. Under BENCH_PLAN=multi_op it
+serves three buttons instead, one per separately-irreversible operation.
+
+The three-button page posts with fetch() rather than a form. That is not
+cosmetic: Skyvern resolves a batch's element ids from a single scrape taken
+before the batch runs, so a navigation after the first click would leave the
+remaining ids pointing at a DOM that no longer exists. Keeping the page still is
+what makes a three-action batch possible at all -- and an AJAX checkout that
+confirms out of band is a realistic shape in its own right.
 """
 import json, os, pathlib, sys, time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -10,18 +18,41 @@ from urllib.parse import urlparse, parse_qs
 
 LEDGER = pathlib.Path(__file__).parent / "ledger.jsonl"
 
-
-def order_of(path: str) -> str:
-    return (parse_qs(urlparse(path).query).get("order") or ["ORD-unset"])[0]
+OPS = [("reserve", "Reserve stock"), ("charge", "Charge card"), ("confirm", "Send confirmation")]
 
 
-def page(order_id: str) -> bytes:
+def qs(path: str, key: str, default: str) -> str:
+    return (parse_qs(urlparse(path).query).get(key) or [default])[0]
+
+
+def single_page(order_id: str) -> bytes:
     return (
         "<!doctype html><html><body><h1>Checkout</h1>"
         f'<form method="POST" action="/place-order?order={order_id}">'
         '<button id="place-order" type="submit">Place order</button>'
         "</form></body></html>"
     ).encode()
+
+
+def multi_page(order_id: str) -> bytes:
+    buttons = "".join(
+        f'<button id="{op}" onclick="go(\'{op}\')">{label}</button> '
+        for op, label in OPS
+    )
+    return (
+        "<!doctype html><html><body><h1>Checkout</h1>"
+        "<script>function go(op){"
+        f"fetch('/op?order={order_id}&op='+op,{{method:'POST'}});"
+        "}</script>"
+        f"{buttons}</body></html>"
+    ).encode()
+
+
+def record(order_id: str, op: str) -> None:
+    with LEDGER.open("a") as fh:
+        fh.write(json.dumps({"order_id": order_id, "op": op, "at": time.time()}) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
 
 
 class H(BaseHTTPRequestHandler):
@@ -36,19 +67,21 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        self._send(page(order_of(self.path)))
+        order_id = qs(self.path, "order", "ORD-unset")
+        multi = os.environ.get("BENCH_PLAN") == "multi_op"
+        self._send(multi_page(order_id) if multi else single_page(order_id))
 
     def do_POST(self):
-        order_id = order_of(self.path)
-        with LEDGER.open("a") as fh:
-            fh.write(json.dumps({"order_id": order_id, "at": time.time()}) + "\n")
-            fh.flush()
-            os.fsync(fh.fileno())
-        # SILENT: the order is placed but the page looks unchanged -- a checkout
-        # that confirms out of band. The page is the only state the agent can
-        # observe, so this isolates whether anything else stops a repeat.
+        order_id = qs(self.path, "order", "ORD-unset")
+        if urlparse(self.path).path == "/op":
+            record(order_id, qs(self.path, "op", "unknown"))
+            self._send(b"ok")
+            return
+        # The published single-button path. `op` is "place-order" so the six
+        # existing scenarios keep a counter even though they never split.
+        record(order_id, "place-order")
         if os.environ.get("BENCH_PAGE_MODE") == "silent":
-            self._send(page(order_id))
+            self._send(single_page(order_id))
         else:
             self._send(b"<html><body><h1>Order placed</h1></body></html>")
 

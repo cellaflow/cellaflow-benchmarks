@@ -38,7 +38,7 @@ CHECKOUT_URL = os.environ["BENCH_CHECKOUT_URL"]
 DIE_AT = os.environ.get("BENCH_DIE_AT", "no")     # no | after_click
 ARM = os.environ.get("BENCH_ARM", "skyvern")      # skyvern | cellaflow
 DUMP_PROMPT = os.environ.get("BENCH_DUMP_PROMPT") == "1"
-PLAN = os.environ.get("BENCH_PLAN", "single")   # single | batch_then_fail
+PLAN = os.environ.get("BENCH_PLAN", "single")   # single | batch_then_fail | multi_op
 PLANNER = os.environ.get("BENCH_PLANNER", "memo")  # memo | stateless
 
 
@@ -49,15 +49,53 @@ PLANNER = os.environ.get("BENCH_PLANNER", "memo")  # memo | stateless
 _calls = {"n": 0}
 
 
-def _find_submit_element_id(prompt: str) -> str | None:
-    """Pull the id of the 'Place order' control out of the scraped element tree.
+MULTI_OPS = [("reserve", "Reserve stock"), ("charge", "Charge card"), ("confirm", "Send confirmation")]
+_ELEMENTS: dict = {}
 
-    Skyvern renders clickable elements into the prompt as HTML with minted short
-    ids, e.g. `<button type="submit" id="AAAC">Place order</button>`. The id is
-    per-scrape, so it is matched on the button's label rather than hardcoded.
+
+def _find_element_id(prompt: str, label: str) -> str | None:
+    """Resolve one button's id from the scrape Skyvern renders into the prompt.
+
+    Ids are minted per scrape (`<button id="AAAC">Place order</button>`), so they
+    are matched on the visible label rather than hardcoded.
     """
-    m = re.search(r'<[^>]*\bid="([^"]+)"[^>]*>\s*Place order\s*<', prompt, re.I)
+    m = re.search(rf'<[^>]*\bid="([^"]+)"[^>]*>\s*{re.escape(label)}\s*<', prompt, re.I)
+    if m:
+        _ELEMENTS[label] = m.group(1)
     return m.group(1) if m else None
+
+
+def _completed_ops(prompt: str) -> set:
+    """Which operations Skyvern's own action history says already happened.
+
+    A real model is told this and would not repeat them. Reading it here is what
+    keeps the result about Skyvern rather than about a stub that ignores what it
+    was given -- and on a mid-step crash this comes back empty, because the
+    history is built from step outputs that were never written.
+    """
+    m = re.search(r"Action history from previous steps:\s*(\[.*?\])\s*\n", prompt, re.S)
+    if not m:
+        return set()
+    done = set()
+    for op, label in MULTI_OPS:
+        eid = _ELEMENTS.get(label)
+        if eid and f'"element_id": "{eid}"' in m.group(1):
+            done.add(op)
+    return done
+
+
+def _click(element_id: str, why: str) -> dict:
+    return {
+        "action_type": "CLICK",
+        "element_id": element_id,
+        "reasoning": f"canned planner: {why}",
+        "confidence_float": 1.0,
+        "intention": why,
+    }
+
+
+def _find_submit_element_id(prompt: str):
+    return _find_element_id(prompt, "Place order")
 
 
 async def canned_llm_api_handler(prompt: str = "", prompt_name: str = "", **kwargs):
@@ -70,6 +108,20 @@ async def canned_llm_api_handler(prompt: str = "", prompt_name: str = "", **kwar
     if "action" not in prompt_name:
         # Verification / summary prompts: answer in the affirmative and move on.
         return {"page_info": "", "thoughts": "canned", "confident": True, "user_goal_achieved": True}
+
+    if PLAN == "multi_op":
+        # One batch, three separately-irreversible operations. A batch rather
+        # than three steps deliberately: step.output is written when a step
+        # ends, so three steps would leave a populated history and the retry
+        # would correctly skip. Only a crash inside one batch loses it.
+        for _op, _label in MULTI_OPS:
+            _find_element_id(prompt, _label)
+        done = _completed_ops(prompt)
+        pending = [(op, lbl) for op, lbl in MULTI_OPS if op not in done and _ELEMENTS.get(lbl)]
+        if not pending:
+            return {"actions": [{"action_type": "COMPLETE", "reasoning": "canned: all operations recorded",
+                                 "confidence_float": 1.0, "intention": "finish"}]}
+        return {"actions": [_click(_ELEMENTS[lbl], f"perform {op}") for op, lbl in pending]}
 
     element_id = _find_submit_element_id(prompt)
     if element_id is None:
@@ -114,6 +166,7 @@ async def canned_llm_api_handler(prompt: str = "", prompt_name: str = "", **kwar
 
 
 _clicked = {"done": False}
+_ops_done = {"n": 0}   # completed operations in this process
 
 
 # ---------------------------------------------------------------------------
@@ -137,8 +190,18 @@ def install_crash_after_click() -> None:
             os._exit(137)
         result = await original(*args, **kwargs)
         _clicked["done"] = True
+        _ops_done["n"] += 1
         if DIE_AT == "after_click":
             print("[driver] dying after handle_action, before any persist", flush=True)
+            sys.stdout.flush()
+            os._exit(137)
+        if DIE_AT == "between_ops" and _ops_done["n"] == 2:
+            # Two operations have landed AND Skyvern has written their action
+            # rows (create_action runs inside handle_action). The third has not
+            # started. The step's own output is still in memory and will never
+            # be written, which is the point: the retry's planner is told
+            # nothing about the two that succeeded.
+            print("[driver] dying between operation 2 and operation 3", flush=True)
             sys.stdout.flush()
             os._exit(137)
         return result

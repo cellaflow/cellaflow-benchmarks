@@ -122,6 +122,47 @@ end of the action loop — every remaining action in the batch, the inter-action
 waits, artifact recording. The leased one is a single RPC. A test aimed squarely
 at the window hits both; a crash arriving at a random moment does not.
 
+## The row where a lock is not enough
+
+The six rows above all reduce to *press one button exactly once*. That is mutual
+exclusion, and mutual exclusion is cheap — a leases table in the Postgres
+Skyvern already runs would do it. This row is on different ground.
+
+A checkout becomes three separately-irreversible operations in one action batch.
+The process dies between the second and the third.
+
+```
+  operation                             Skyvern   + CellaFlow   correct
+  ---------------------------------------------------------------------
+  reserve stock                               1             1         1
+  charge card                                 1             1         1
+  send confirmation                           0             1         1
+                                        stranded      completes
+```
+
+**Skyvern does not duplicate here. It strands the sequence half-done.** The
+card is charged, the stock is held, and the confirmation is never sent — and
+because the dead worker's step is still `running`, no retry can ever finish it.
+The customer has paid and will never hear anything.
+
+**Both leases are load-bearing, and that is the point of the row.** The
+execution lease proves the previous holder stopped heartbeating, which licenses
+clearing its step and lets the retry proceed at all. The operation leases then
+supply what a lock cannot: `reserve` and `charge` return their *stored results*
+rather than being performed again.
+
+A distributed lock gets you the first half. It would unstick the task and then
+re-run the batch from the top, because a lock records who is holding it and not
+what the work returned — `2, 2, 1`. The difference between that and `1, 1, 1` is
+durable results, which is the one thing a leases table in Postgres does not have.
+
+The batch shape is deliberate. `step.output` is written when a step *ends*, so
+three separate steps would leave a populated action history and the retry would
+correctly skip the first two on its own. Only a crash inside a single batch
+loses it — which is also why the planner here reads Skyvern's action history and
+skips anything already listed: on this crash it comes back empty, and the result
+is about Skyvern rather than about a stub ignoring what it was given.
+
 ## What this does not claim
 
 Two of six rows are still wrong with the integration in place. It closes the
