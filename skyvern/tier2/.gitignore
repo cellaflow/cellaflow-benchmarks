@@ -1,0 +1,5 @@
+venv/
+ledger.jsonl
+.last_action_prompt.txt
+__pycache__/
+artifacts/

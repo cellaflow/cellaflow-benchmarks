@@ -1,3 +1,11 @@
+> **CORRECTED 2026-09-17 — do not quote this file's table.** Running the real
+> Skyvern agent loop (see [`tier2/`](tier2/)) shows the prediction below is
+> wrong. A crashed run does **not** buy twice: a running-step guard
+> (`agent_functions.py:1542`) blocks the retry, so the order is placed once and
+> the **task deadlocks permanently**. Skyvern is better on duplicates than this
+> model implied and has a failure this model did not contain. `tier2/` is the
+> measurement; this file is kept for the method and the correction.
+
 # A Skyvern run that dies mid-checkout buys the thing twice
 
 Skyvern validates an `idempotency_key` — carefully, with bounds checks and its own
