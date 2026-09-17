@@ -1,0 +1,10 @@
+venv/
+ledger.jsonl
+__pycache__/
+.prompt_call*.txt
+.last_action_prompt.txt
+har/
+log/
+temp/
+video/
+artifacts/

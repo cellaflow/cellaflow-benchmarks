@@ -1,0 +1,10 @@
+# Skyvern at the exact commit these findings were measured against. Pinned by
+# SHA rather than version so the line numbers cited in the README resolve.
+#
+# The [server] extra is required: the base install is client-only and carries
+# neither sqlalchemy, playwright nor litellm, so the agent loop will not run
+# without it.
+skyvern[server] @ git+https://github.com/Skyvern-AI/skyvern.git@d23ceb40f5b9e6532efbfd6eed2cc03e7502cc7c
+
+# Chromium is not a pip dependency. After installing, run:
+#   playwright install chromium
