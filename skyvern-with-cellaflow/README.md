@@ -6,7 +6,7 @@ Same harness, same scenarios, same canned planner, same Skyvern v1.0.53 at
 Skyvern.
 
 ```
-  scenario                            Skyvern   + leases   correct
+  scenario                            Skyvern  + CellaFlow  correct
   ---------------------------------------------------------------------
   control, no crash                         1          1         1
   crash before the click, then retry        0          1         1     fixed
@@ -38,6 +38,21 @@ derives the same key.
 
 Neither is a patch to Skyvern. The execution lease wraps the run; the operation
 lease routes the checkout click through `@tool`.
+
+**They use two different CellaFlow surfaces, and it is worth knowing which.** The
+operation lease is `durable_tools` plus `@tool` — the shipped, ergonomic path.
+The execution lease is the raw client (`check_idempotency_cache` / `renew_lease`
+/ `release_lease`), deliberately: `@tool` commits a result on return, which is
+memoization, and a second legitimate step on the same task would take a cache hit
+and be skipped. Mutual exclusion wants acquire, heartbeat, release, with no
+commit.
+
+Which means the two fixed rows below are the **execution** lease's doing, not
+`durable_tools`'. Wrapping the invocation in `durable_tools` alone would catch the
+race late — after both workers have booted a browser and scraped — and would not
+touch the stranding at all, because it has no visibility into Skyvern's `steps`
+table. The row `durable_tools` is aimed at is *operator reruns*, and that is the
+row that does not move.
 
 ## Row by row
 
@@ -78,9 +93,7 @@ alone. Anyone selling this as *fixed* has not read the table.
 ## Run it
 
 ```bash
-docker run -d --name sk-pg -e POSTGRES_USER=skyvern -e POSTGRES_PASSWORD=skyvern \
-  -e POSTGRES_DB=skyvern -p 5440:5432 postgres:14-alpine
-docker run -d -p 50051:50051 -p 9090:9090 ghcr.io/cellaflow/cellaflow:latest
+docker compose up -d --wait          # Postgres for Skyvern, CellaFlow for the leases
 
 python -m venv venv && ./venv/bin/pip install -r requirements.txt
 ./venv/bin/playwright install chromium
