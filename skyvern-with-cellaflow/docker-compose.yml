@@ -24,6 +24,10 @@ services:
       CELLAFLOW_DB_PATH: /data/cellaflow
     ports: ["50051:50051", "9090:9090"]
     healthcheck:
+      # Redundant once the published image ships its own -- see the engine repo's
+      # Dockerfile, where this same check now lives. Kept here until that image
+      # is rebuilt, because :latest as of this writing declares no healthcheck.
+      #
       # The image carries no wget, curl or nc -- but it has bash, and bash can
       # open a socket. /health/ready returns 503 until boot recovery finishes,
       # so grepping for 200 is a real readiness check and not just a port probe.
