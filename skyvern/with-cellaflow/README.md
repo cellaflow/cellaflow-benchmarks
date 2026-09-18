@@ -112,7 +112,7 @@ doing its part:
 [driver] lease returned a prior result for charge; not repeating it
 ```
 
-**Each lease was measured separately on this row**, by running it again with the
+**The row was run a third time to see which lease does what**, with the
 per-operation leases switched off and the execution lease left on:
 
 ```
@@ -121,20 +121,38 @@ per-operation leases switched off and the execution lease left on:
   reserve stock              1                      2             1         1
   charge card                1                      2             1         1
   send confirmation          0                      1             1         1
-                      stranded          un-stranded,
-                                       and duplicated
 ```
 
-The middle column is the whole argument. Mutual exclusion with liveness — which
-is all a distributed lock is, and what a leases table in Postgres would give you
-— **unsticks the task and then charges the card a second time.** It clears the
-dead holder's claim (`cleared 1 stale running step(s)`) and records zero cache
-hits, because a lock has nowhere to put a result. The retry re-runs the batch
-from the top.
+Reading the `execution lease only` column, which is the one worth understanding:
 
-Knowing that `charge` already returned is a different property from knowing
-nobody else is running. That is the distinction this row exists to draw, and it
-is measured rather than argued.
+1. The first worker reserves stock, charges the card, and dies.
+2. Its lease stops being renewed, so the retry can prove the holder is gone and
+   clear the step it left `running`. The log shows
+   `cleared 1 stale running step(s)`. **The task un-sticks**, where Skyvern on
+   its own leaves it dead.
+3. The retry then runs the batch again — and nothing anywhere records that
+   reserve and charge already completed. Zero cache hits. It performs all three.
+4. Stock reserved twice, **card charged twice**, confirmation sent once.
+
+So arbitrating ownership on its own does not fix this row. It converts a
+stranded task into a double charge — a different failure, not a solved one.
+
+**What that column stands for.** Any mechanism that answers *is anyone else
+working on this* and releases when the holder dies: a `pg_advisory_lock`, a
+Redis lock, a TTL'd leases table in the Postgres Skyvern already runs. None of
+them answer *what did the work return*, which is the question that decides
+whether the card is charged again.
+
+It is a proxy for that class, not for any one of them. An advisory lock in
+particular differs elsewhere — its liveness is connection liveness rather than a
+heartbeat, it pins a database connection for the whole operation, and it carries
+no fencing token. On *this* row those differences do not change the outcome,
+because the only properties in play are ownership with reclaim, and no record of
+results.
+
+The `both leases` column adds the second property: each operation is keyed on the
+business operation, so the retry asks whether `charge` for this order already
+completed, gets the stored answer, and skips it.
 
 **Crash after the click — a trade, not a win.** Skyvern places one order and
 strands the task forever; with the lease the task finishes and there are two
