@@ -1,0 +1,9 @@
+# Skyvern at the exact commit the audit next door measured, so the comparison
+# holds the subject constant and changes only the integration.
+skyvern[server] @ git+https://github.com/Skyvern-AI/skyvern.git@d23ceb40f5b9e6532efbfd6eed2cc03e7502cc7c
+
+# The integration itself.
+cellaflow>=0.7.0
+
+# Chromium is not a pip dependency. After installing, run:
+#   playwright install chromium

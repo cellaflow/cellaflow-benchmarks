@@ -1,0 +1,41 @@
+# Both services this comparison needs. Skyvern keeps its tasks and steps in
+# Postgres; CellaFlow holds the leases. Neither knows about the other -- which
+# is the point, and is why the integration is eighty lines rather than a fork.
+services:
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: skyvern
+      POSTGRES_PASSWORD: skyvern
+      POSTGRES_DB: skyvern
+    # 5440, not 5432: Skyvern's own compose already claims 5432, and running
+    # this beside a real Skyvern stack should not fight it for the port.
+    ports: ["5440:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skyvern"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  cellaflow:
+    image: ghcr.io/cellaflow/cellaflow:latest
+    environment:
+      CELLAFLOW_HOST: "::"
+      CELLAFLOW_DB_PATH: /data/cellaflow
+    ports: ["50051:50051", "9090:9090"]
+    healthcheck:
+      # Redundant once the published image ships its own -- see the engine repo's
+      # Dockerfile, where this same check now lives. Kept here until that image
+      # is rebuilt, because :latest as of this writing declares no healthcheck.
+      #
+      # The image carries no wget, curl or nc -- but it has bash, and bash can
+      # open a socket. /health/ready returns 503 until boot recovery finishes,
+      # so grepping for 200 is a real readiness check and not just a port probe.
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/9090 && printf "GET /health/ready HTTP/1.0\r\n\r\n" >&3 && grep -q "200 OK" <&3'
+      interval: 2s
+      timeout: 3s
+      retries: 30

@@ -1,0 +1,17 @@
+# The only service this audit needs. Skyvern keeps its tasks and steps here;
+# nothing else is stood up, because nothing else is measured.
+services:
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: skyvern
+      POSTGRES_PASSWORD: skyvern
+      POSTGRES_DB: skyvern
+    # 5440, not 5432: Skyvern's own compose already claims 5432, and running
+    # this beside a real Skyvern stack should not fight it for the port.
+    ports: ["5440:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skyvern"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
