@@ -265,5 +265,7 @@ and changes nothing about action execution, persistence or retry.
 
 ---
 
-[`../skyvern-with-cellaflow/`](../skyvern-with-cellaflow/) runs the identical
-harness with two leases added, and reports which of these rows move.
+[`with-cellaflow/`](with-cellaflow/) runs this same harness with two leases
+added, and reports which of these rows move. It is kept as a separate setup
+rather than a flag on this one, so what belongs to Skyvern and what belongs to
+the integration stays legible.

@@ -1,7 +1,7 @@
 # The same Skyvern, with two leases
 
 Identical harness, identical scenarios, identical canned planner, identical
-Skyvern v1.0.53 at `d23ceb4` as [the audit](../skyvern/). The only difference is
+Skyvern v1.0.53 at `d23ceb4` as [the audit one level up](../). The only difference is
 [`integration.py`](integration.py) and two call sites — nothing inside Skyvern.
 
 ```
