@@ -1,4 +1,4 @@
-# The same Skyvern, with two leases
+# The same Skyvern, with an execution lease and a lease per operation
 
 Identical harness, identical scenarios, identical canned planner, identical
 Skyvern v1.0.53 at `d23ceb4` as [the audit one level up](../). The only difference is
@@ -52,7 +52,8 @@ right.
 ## What actually changes for a customer
 
 What the customer experiences in each case, running Skyvern on its own versus
-Skyvern with the two leases added:
+Skyvern with an execution lease over the task and a lease on each irreversible
+operation:
 
 | what goes wrong | Skyvern alone | Skyvern + CellaFlow |
 | :--- | :--- | :--- |
@@ -116,11 +117,11 @@ doing its part:
 per-operation leases switched off and the execution lease left on:
 
 ```
-  operation            Skyvern   execution lease only   both leases   correct
-  ---------------------------------------------------------------------------
-  reserve stock              1                      2             1         1
-  charge card                1                      2             1         1
-  send confirmation          0                      1             1         1
+  operation            Skyvern   execution lease only   + operation leases   correct
+  ---------------------------------------------------------------------------------
+  reserve stock              1                      2                    1         1
+  charge card                1                      2                    1         1
+  send confirmation          0                      1                    1         1
 ```
 
 Reading the `execution lease only` column, which is the one worth understanding:
@@ -150,9 +151,11 @@ no fencing token. On *this* row those differences do not change the outcome,
 because the only properties in play are ownership with reclaim, and no record of
 results.
 
-The `both leases` column adds the second property: each operation is keyed on the
-business operation, so the retry asks whether `charge` for this order already
-completed, gets the stored answer, and skips it.
+The `+ operation leases` column adds the second property. Note the counts: this
+row holds **one** execution lease, keyed on the task, and **three** operation
+leases — `reserve:ORD-x`, `charge:ORD-x`, `confirm:ORD-x`, one per irreversible
+call. The retry asks whether `charge` for this order already completed, gets the
+stored answer back, and skips it.
 
 **Crash after the click — a trade, not a win.** Skyvern places one order and
 strands the task forever; with the lease the task finishes and there are two
