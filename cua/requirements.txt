@@ -1,0 +1,3 @@
+# cua-agent requires Python >=3.11,<3.14. If your default is outside that range:
+#   uv venv --python 3.13 venv
+cua-agent==0.8.4
