@@ -116,13 +116,25 @@ doing its part:
 **The row was run a third time to see which lease does what**, with the
 per-operation leases switched off and the execution lease left on:
 
+Three configurations, each adding to the one before it:
+
+- **Skyvern** — as shipped, no leases.
+- **+ execution lease** — one lease over the task, heartbeated.
+- **+ operation leases** — that same execution lease, **plus** one lease on each
+  irreversible operation.
+
 ```
-  operation            Skyvern   execution lease only   + operation leases   correct
-  ---------------------------------------------------------------------------------
-  reserve stock              1                      2                    1         1
-  charge card                1                      2                    1         1
-  send confirmation          0                      1                    1         1
+  operation            Skyvern   + execution lease   + operation leases   correct
+  --------------------------------------------------------------------------------
+  reserve stock              1                   2                    1         1
+  charge card                1                   2                    1         1
+  send confirmation          0                   1                    1         1
 ```
+
+The third column is cumulative — it has both kinds. Operation leases *without*
+the execution lease was never run and would not help: with nothing to clear the
+dead holder's step, the retry never executes at all, so it would read `1, 1, 0`
+like the first column.
 
 Reading the `execution lease only` column, which is the one worth understanding:
 
