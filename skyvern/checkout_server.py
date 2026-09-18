@@ -67,8 +67,11 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        # Page mode comes from the request, not the server's environment, so one
+        # server serves every scenario in a run. Reading it from the environment
+        # meant the multi-operation scenario silently got the one-button page.
         order_id = qs(self.path, "order", "ORD-unset")
-        multi = os.environ.get("BENCH_PLAN") == "multi_op"
+        multi = qs(self.path, "plan", "") == "multi_op"
         self._send(multi_page(order_id) if multi else single_page(order_id))
 
     def do_POST(self):

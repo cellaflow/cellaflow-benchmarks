@@ -38,7 +38,8 @@ def run(order_id: str, *, die: str = "no", org: str = "", task: str = "",
     env = {
         **os.environ,
         "BENCH_ORDER_ID": order_id,
-        "BENCH_CHECKOUT_URL": f"{CHECKOUT_BASE}?order={order_id}",
+        "BENCH_CHECKOUT_URL": f"{CHECKOUT_BASE}?order={order_id}"
+                              + ("&plan=multi_op" if plan == "multi_op" else ""),
         "BENCH_DIE_AT": die,
         "BENCH_PLAN": plan,
         "BENCH_ORG_ID": org,

@@ -356,19 +356,28 @@ async def _execute(app, org, task, step) -> None:
     stopped heartbeating. That is what licenses clearing them -- the question
     Skyvern's status column cannot answer.
     """
-    from integration import LeaseNotAcquired, clear_stale_running_steps, task_execution_lease
-    from cellaflow import durable_tools
+    from cellaflow import async_execution_lease, durable_tools, LeaseNotAcquired
+    from integration import ENGINE, HEARTBEAT_MS, LEASE_TTL_MS, clear_stale_running_steps
 
     worker = f"worker-{os.getpid()}"
     try:
-        with task_execution_lease(task.task_id, worker):
+        async with async_execution_lease(
+            f"skyvern:task:{task.task_id}",
+            worker_id=worker,
+            target=ENGINE,
+            ttl_ms=LEASE_TTL_MS,
+            heartbeat_interval_ms=HEARTBEAT_MS,
+        ):
+            # Holding the lease means any `running` step here is a tombstone.
             cleared = await clear_stale_running_steps(app, task.task_id, org.organization_id)
             if cleared:
                 print(f"[driver] cleared {cleared} stale running step(s)", flush=True)
-            with durable_tools(f"skyvern:{ORDER_ID}", target=os.environ.get("CELLAFLOW_TARGET", "localhost:50051")):
+            with durable_tools(f"skyvern:{ORDER_ID}", target=ENGINE):
                 await _execute_inner(app, org, task, step)
     except LeaseNotAcquired as e:
-        print(f"[driver] refused: {e}", flush=True)
+        # A live worker holds this task. The point of the row: a status column
+        # reports this identically to a holder that died.
+        print(f"[driver] refused, task held by a live worker: {e}", flush=True)
     return
 
 

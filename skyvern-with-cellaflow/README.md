@@ -1,232 +1,132 @@
 # The same Skyvern, with two leases
 
-Same harness, same scenarios, same canned planner, same Skyvern v1.0.53 at
-`d23ceb4` as [the audit](../skyvern/). The only difference is
-[`integration.py`](integration.py) — about eighty lines, none of them inside
-Skyvern.
+Identical harness, identical scenarios, identical canned planner, identical
+Skyvern v1.0.53 at `d23ceb4` as [the audit](../skyvern/). The only difference is
+[`integration.py`](integration.py) and two call sites — nothing inside Skyvern.
 
 ```
   scenario                            Skyvern  + CellaFlow  correct
   ---------------------------------------------------------------------
   control, no crash                         1          1         1
-  crash before the click, then retry        0          1         1     fixed
-  crash after the click, then retry         1          2         1     traded
+  crash before the click, then retry        0          1         1   fixed
+  crash after the click, then retry         1          2         1   traded
   action fails mid-batch                    1          1         1
-  stranded task, operator reruns            2          2         1     unchanged
-  two processes, one task                   2          1         1     fixed
+  stranded task, operator reruns            2          2         1   unchanged
+  two processes, one task                   2          1         1   fixed
+
+  three operations, crash between 2 and 3
+    reserve stock                           1          1         1
+    charge card                             1          1         1
+    send confirmation                       0          1         1   fixed
 ```
 
-Orders placed against one order id.
+**Fully correct rows: 2 of 7 → 5 of 7.**
 
-## What each row is
+## What actually changes for a customer
 
-The agent's job in every scenario is the same: visit a checkout page and press
-**Place order** once. What differs is what goes wrong while it does that.
+| situation | before | after |
+| :--- | :--- | :--- |
+| crash mid-sequence | **charged, no confirmation, unrecoverable** | order completes |
+| crash before any action | request silently dropped | retry completes it |
+| two workers get the task | **charged twice** | charged once |
+| crash after an action | one order, task dead forever | order completes, **second charge** |
+| operator restarts a stuck run | **charged twice** | **charged twice** |
 
-**control, no crash.** One run, nothing interrupts it. Places one order. This row
-exists to prove the harness works — if it reads anything but `1`, every other
-number is a fault in the test and not a finding about Skyvern.
-
-**crash before the click, then retry.** The worker decides to click and the
-process is killed *before the click is sent*. Nothing irreversible happened: no
-order, no charge, nothing to deduplicate. A second run then retries the same
-task, which is what a worker pool or a supervisor does. **Correct is one order** —
-the retry should finish the job. Zero means the customer's request is silently
-lost: no error reaches them, nothing alerts, and nobody is ever shipped anything.
-
-**crash after the click, then retry.** The process is killed the instant the
-click lands, before anything records that it did. The order *is* placed. A second
-run retries the same task. **Correct is one order and a finished task.** Two
-orders means the customer paid twice; a stuck task means the run never completes
-and nobody knows the order went through.
-
-**action fails mid-batch.** Skyvern executes actions in batches. Here the order
-succeeds and a later action in the same batch fails. **Correct is one order** —
-the failure must not cause the successful actions to be repeated.
-
-**stranded task, operator reruns.** After a crash leaves a task unable to
-continue, someone starts a *fresh* run for the same order. This is what you do
-when a run is visibly stuck, and it is the only option when the task cannot be
-retried. **Correct is one order** — the new run should recognise the work is
-already done rather than redo it.
-
-**two processes, one task.** Two workers pick up the same task at the same
-moment. This models a redelivered queue message or a duplicate dispatch, which is
-ordinary in any worker pool. **Correct is one order** — only one of them should
-act.
-
+Three situations stop costing anything. One trades a dead task for a duplicate.
+One is unchanged.
 
 ## What the leases are
 
 Skyvern's step guard (`agent_functions.py:1542`) asks whether any step on the
 task is `running`. That answers *did someone start this*. It cannot answer *is
 that someone still here*, which is the only question that matters once a process
-has died — and a status column has no way to express it.
+has died — a status column has no way to express liveness.
 
-A heartbeated lease can, and that is the whole of what is added:
+A heartbeated lease can, and both halves are shipped SDK surfaces as of
+**cellaflow 0.7.0**:
 
-**An execution lease, keyed on the task.** Held for one worker's run and
-heartbeated while it lives. Holding it means every `running` step on the task
-belongs to a holder that stopped heartbeating — a tombstone, not a live worker.
-That is what makes clearing it safe.
+**`async_execution_lease`, keyed on the task.** Heartbeated while the worker
+lives. Holding it means every `running` step on that task belongs to a holder
+that stopped heartbeating — a tombstone, not a live worker. That is what makes
+clearing it safe, and it is the question Skyvern's column cannot answer. If the
+lease is lost mid-run the calling task is cancelled rather than continuing
+unprotected.
 
-**An operation lease, keyed on the order.** Not on the task, the step or the run.
-The idempotency cache is position-independent, so a fresh run started later
-derives the same key.
+**`durable_tools` + `@tool`, keyed on the business operation** — `charge:ORD-x`,
+not the task, step or run. The idempotency cache is position-independent, so a
+retry under a new step id derives the same key and takes a hit.
 
-Neither is a patch to Skyvern. The execution lease wraps the run; the operation
-lease routes the checkout click through `@tool`.
-
-**They use two different CellaFlow surfaces, and it is worth knowing which.** The
-operation lease is `durable_tools` plus `@tool` — the shipped, ergonomic path.
-The execution lease is the raw client (`check_idempotency_cache` / `renew_lease`
-/ `release_lease`), deliberately: `@tool` commits a result on return, which is
-memoization, and a second legitimate step on the same task would take a cache hit
-and be skipped. Mutual exclusion wants acquire, heartbeat, release, with no
-commit.
-
-Which means the two fixed rows below are the **execution** lease's doing, not
-`durable_tools`'. Wrapping the invocation in `durable_tools` alone would catch the
-race late — after both workers have booted a browser and scraped — and would not
-touch the stranding at all, because it has no visibility into Skyvern's `steps`
-table. The row `durable_tools` is aimed at is *operator reruns*, and that is the
-row that does not move.
+`clear_stale_running_steps` in `integration.py` is the only code this adds beyond
+calling those two. It is short because the lease already answered the hard part.
 
 ## What changed, and what did not
 
-**Crash before the click — the stranding is gone.** Skyvern leaves the task
-permanently unretryable and the customer never gets their order: `0`. With the
-lease, the retry finds the dead holder's step is a tombstone, clears it, and
-completes the work: `1`. This is the row the integration exists for.
+**Crash before the click — the stranding is gone.** Skyvern places no order and
+the task can never run again; the customer's request is silently dropped. With
+the lease the retry finds the dead holder's step is a tombstone, clears it, and
+completes the work.
 
 **Two processes on one task — the race is closed.** Skyvern's check is
-read-then-act and both workers click: `2`. The lease is the arbitration point,
-so the second worker never runs: `1`.
+read-then-act and both workers click. The lease is the arbitration point, so the
+second worker is refused before it starts.
 
-**Crash after the click — a trade, and it is the documented one.** Skyvern
-places one order and strands the task forever. With the lease the task finishes
-and there are two orders. That is *charge once and deadlock* against *charge
-twice and complete*, which is exactly the trade the
-[crash benchmark](https://github.com/cellaflow/cellaflow-sdks/tree/main/examples/crash_benchmark)
-measures between a claim and a lease. Neither column is correct; they fail
-differently, and one of them leaves you something to reconcile.
-
-**Operator reruns — unchanged, and this one is not fixable here.** The crash
-lands between the click and the lease commit, so nothing anywhere recorded that
-the order was placed, and the next run has nothing to hit. This is the
-`crash: during` window: the click is not a database write, so no lease can
-bracket it. The crash benchmark says the same thing about our own arm.
-
-What does change is the size of the window. Skyvern's runs from the click to the
-end of the action loop — every remaining action in the batch, the inter-action
-waits, artifact recording. The leased one is a single RPC. A test aimed squarely
-at the window hits both; a crash arriving at a random moment does not.
-
-## The row where a lock is not enough
-
-The six rows above all reduce to *press one button exactly once*. That is mutual
-exclusion, and mutual exclusion is cheap — a leases table in the Postgres
-Skyvern already runs would do it. This row is on different ground.
-
-A checkout becomes three separately-irreversible operations in one action batch.
-The process dies between the second and the third.
+**Three operations, crash between two and three — the row a lock cannot reach.**
+Skyvern charges the card, holds the stock, and never sends the confirmation, with
+no retry able to finish it. With the leases, `reserve` and `charge` return their
+**stored results** and only `confirm` executes. The run log shows each mechanism
+doing its part:
 
 ```
-  operation                             Skyvern   + CellaFlow   correct
-  ---------------------------------------------------------------------
-  reserve stock                               1             1         1
-  charge card                                 1             1         1
-  send confirmation                           0             1         1
-                                        stranded      completes
+[driver] cleared 1 stale running step(s)
+[driver] lease returned a prior result for reserve; not repeating it
+[driver] lease returned a prior result for charge; not repeating it
 ```
 
-**Skyvern does not duplicate here. It strands the sequence half-done.** The
-card is charged, the stock is held, and the confirmation is never sent — and
-because the dead worker's step is still `running`, no retry can ever finish it.
-The customer has paid and will never hear anything.
+A distributed lock supplies only the first of those lines. It would unstick the
+task and then re-run the batch from the top, because a lock records who is
+holding it and not what the work returned. That reasoning is not measured here —
+no lock arm was built — but it is the distinction the row exists to draw:
+clearing a dead holder's claim is mutual exclusion, and knowing that `charge`
+already returned is not.
 
-**Both leases are load-bearing, and that is the point of the row.** The
-execution lease proves the previous holder stopped heartbeating, which licenses
-clearing its step and lets the retry proceed at all. The operation leases then
-supply what a lock cannot: `reserve` and `charge` return their *stored results*
-rather than being performed again.
+**Crash after the click — a trade, not a win.** Skyvern places one order and
+strands the task forever; with the lease the task finishes and there are two
+orders. *Charge once and deadlock* against *charge twice and complete*. Neither
+column is correct. They fail differently, and only one leaves something you can
+reconcile.
 
-A distributed lock supplies only the first half. It would unstick the task and
-then re-run the batch from the top, because a lock records who is holding it and
-not what the work returned. That reasoning is not measured here — no lock arm
-was built — but it is the whole distinction the row exists to draw: clearing a
-dead holder's claim is mutual exclusion, and knowing that `charge` already
-returned is not.
+**Operator reruns — unchanged, and not fixable here.** The crash lands between
+the click and the lease commit, so nothing anywhere recorded the order and the
+next run has nothing to match. This is the `crash: during` window: the click is
+not a database write, so no lease can bracket it.
 
-The batch shape is deliberate. `step.output` is written when a step *ends*, so
-three separate steps would leave a populated action history and the retry would
-correctly skip the first two on its own. Only a crash inside a single batch
-loses it — which is also why the planner here reads Skyvern's action history and
-skips anything already listed: on this crash it comes back empty, and the result
-is about Skyvern rather than about a stub ignoring what it was given.
+What does change is the window's size. Skyvern's runs from the click to the end
+of the action loop — every remaining action, the inter-action waits, artifact
+recording. The leased one is a single RPC. A test aimed squarely at the window
+hits both; a crash arriving at a random moment does not.
 
-## The record survives. The planner is not shown it.
-
-This is the cheapest thing on this page to fix, and it changes more than one row.
-
-Skyvern persists an action **inside** `handle_action`, before that function
-returns (`webeye/actions/handler.py:4925`):
-
-```python
-action.finished_at = naive_utc_now()
-persisted_action = await app.DATABASE.workflow_params.create_action(...)
-action.action_id = persisted_action.action_id
-return results
-```
-
-So a crash immediately after a click still leaves a durable row. Confirmed in
-Postgres after exactly that crash:
-
-```
-actions:  click | completed | AAAC        <- survived
-steps:    stp_…500 | running | output=∅   <- never written
-```
-
-But the history the planner is given comes from step outputs, not from those
-rows (`services/action_service.py:29`):
-
-```python
-for window_step in window_steps:
-    if window_step.output and window_step.output.actions_and_results:
-```
-
-`step.output` is written when a step *ends*. A crash mid-step never writes it.
-So the retry's first prompt reads:
-
-```
-Action history from previous steps:
-[]
-```
-
-**Skyvern knows the click happened and does not tell the planner.** The model is
-asked to decide what to do next with no record of what it already did, on a page
-that still shows the button — and a model with no other information clicks it.
-
-Sourcing that history from the `actions` rows, which already exist and already
-carry `status` and `element_id`, would close it without new infrastructure. It
-would not fix findings 1 or 3, which are about ownership rather than memory. It
-would change the two rows that are about memory.
+Worth noting this row also becomes *less reachable*: it exists because stranding
+forces someone to start a fresh run, and stranding is now fixed. It remains a
+risk if a user retries by hand.
 
 ## What this does not claim
 
-Two of six rows are still wrong with the integration in place. It closes the
-stranding and the race, trades the third, and leaves the unsurvivable window
-alone. Anyone selling this as *fixed* has not read the table.
+Two of seven rows are still wrong with the integration in place. It closes the
+stranding, the race and the half-done sequence, trades the fourth, and leaves the
+unsurvivable window alone. Anyone reading this as *solved* has not read the
+table.
 
 ## Run it
 
 ```bash
 docker compose up -d --wait          # Postgres for Skyvern, CellaFlow for the leases
 
+git clone https://github.com/Skyvern-AI/skyvern && (cd skyvern && git checkout d23ceb4)
+DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@localhost:5440/skyvern \
+  alembic -c skyvern/alembic.ini upgrade head
+
 python -m venv venv && ./venv/bin/pip install -r requirements.txt
 ./venv/bin/playwright install chromium
-DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@localhost:5440/skyvern \
-  ./venv/bin/alembic upgrade head      # from a Skyvern checkout at d23ceb4
 
 ./venv/bin/python checkout_server.py 8899 &
 PYTHONPATH=. ./venv/bin/python harness.py

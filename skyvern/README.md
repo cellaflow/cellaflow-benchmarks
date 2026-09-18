@@ -1,9 +1,9 @@
-# A crashed Skyvern run strands the task, and the way out of that is what orders twice
+# What happens to a Skyvern task when a process dies
 
-Measured against **real Skyvern** — real `execute_step`, real Playwright, real
-Postgres, real retry chain. The LLM that picks which element to click is replaced
-by a canned planner. Nothing else is substituted. Skyvern v1.0.53, commit
-`d23ceb4`.
+An audit of **real Skyvern** — real `execute_step`, real Playwright, real
+Postgres, real retry chain. The only substitution is the LLM that picks which
+element to click, replaced by a canned planner so the run is deterministic and
+costs nothing. Skyvern v1.0.53, commit `d23ceb4`.
 
 ```
   scenario                              orders  correct   outcome
@@ -21,11 +21,19 @@ by a canned planner. Nothing else is substituted. Skyvern v1.0.53, commit
     send confirmation                        0        1   sequence stranded
 ```
 
-Orders placed against one order id. `correct` is what the customer should end up
-with: exactly one order, and the work finished. Row two reads `0` because the
-stranded task means the order is never placed at all -- the failure shows in the
-count. Row three reads `1` because the order was placed correctly; its failure
-is that the task can never finish, which the outcome column carries instead.
+**Two of the seven rows are correct.** What the other five cost, in order of how
+much they cost:
+
+| what happens | what it costs |
+| :--- | :--- |
+| a crash mid-sequence | **the card is charged, the confirmation never sent, and no retry can ever finish it** |
+| a crash before any action | the customer's request is silently dropped — no order, no error, no alert |
+| an operator restarts a stuck run | **the customer is charged twice** |
+| two workers get the same task | **the customer is charged twice** |
+| a crash after an action | one correct order on a task that can never complete, so nothing downstream knows it succeeded |
+
+None of these surface as an error to anyone. That is the through-line: every
+failure here is silent.
 
 ## What each row is
 
@@ -37,37 +45,33 @@ exists to prove the harness works — if it reads anything but `1`, every other
 number is a fault in the test and not a finding about Skyvern.
 
 **crash before the click, then retry.** The worker decides to click and the
-process is killed *before the click is sent*. Nothing irreversible happened: no
-order, no charge, nothing to deduplicate. A second run then retries the same
-task, which is what a worker pool or a supervisor does. **Correct is one order** —
-the retry should finish the job. Zero means the customer's request is silently
-lost: no error reaches them, nothing alerts, and nobody is ever shipped anything.
+process is killed *before the click is sent*. Nothing irreversible happened. A
+second run then retries the same task, which is what a worker pool or a
+supervisor does. **Correct is one order** — the retry should finish the job.
 
 **crash after the click, then retry.** The process is killed the instant the
-click lands, before anything records that it did. The order *is* placed. A second
-run retries the same task. **Correct is one order and a finished task.** Two
-orders means the customer paid twice; a stuck task means the run never completes
-and nobody knows the order went through.
+click lands. The order *is* placed. A second run retries the same task.
+**Correct is one order and a finished task.**
 
 **action fails mid-batch.** Skyvern executes actions in batches. Here the order
 succeeds and a later action in the same batch fails. **Correct is one order** —
-the failure must not cause the successful actions to be repeated.
+the failure must not repeat the successful actions.
 
 **stranded task, operator reruns.** After a crash leaves a task unable to
 continue, someone starts a *fresh* run for the same order. This is what you do
-when a run is visibly stuck, and it is the only option when the task cannot be
-retried. **Correct is one order** — the new run should recognise the work is
-already done rather than redo it.
+when a run is visibly stuck, and it is the only option when the task itself
+cannot be retried. **Correct is one order.**
 
 **two processes, one task.** Two workers pick up the same task at the same
-moment. This models a redelivered queue message or a duplicate dispatch, which is
-ordinary in any worker pool. **Correct is one order** — only one of them should
-act.
+moment — a redelivered queue message, or a duplicate dispatch. **Correct is one
+order.**
 
+**three operations, crash between 2 and 3.** The checkout becomes three
+separately-irreversible operations in one action batch: reserve stock, charge
+card, send confirmation. The process dies after the second. **Correct is each
+operation exactly once.**
 
-Four findings.
-
-## 1. Any crash during a step strands the task
+## 1. Any crash during a step strands the task, permanently
 
 `agent_functions.py:1542` gates every step on whether another is already running:
 
@@ -77,24 +81,25 @@ has_no_running_steps = not any(step.status == StepStatus.running for step in ste
 ```
 
 A claim with **no lease, no heartbeat and no expiry**. `StepStatus.running` is
-written in exactly one place (`agent.py:3819`), and nothing reaps a stale one.
+written in exactly one place (`agent.py:3819`) and nothing reaps a stale one.
 
-A process that dies mid-step leaves its step `running` permanently. The retry is
-refused with `StepUnableToExecuteError: ['another_step_is_running_for_task:...']`.
-Postgres afterwards:
+The retry is refused with
+`StepUnableToExecuteError: ['another_step_is_running_for_task:...']`. In Postgres:
 
 ```
-stp_...100 | running | retry_index 0     the process that died
-stp_...762 | created | retry_index 1     the retry, blocked
-task       | running
+stp_…100 | running | retry_index 0     the process that died
+stp_…762 | created | retry_index 1     the retry, blocked
+task     | running
 ```
+
+**Impact.** The work stops and nothing says so. Not an error, not a failed
+status — the task reads `running` forever, so any dashboard or alert keyed on
+failure sees nothing wrong. Whoever was waiting on that order waits indefinitely.
 
 **This is not about side effects.** Crashing *before* the click places no order
 and strands the task identically. Any process death during a step is enough.
 
 ## 2. The way out of a stranded task is what duplicates the order
-
-The finding that matters, and it is the two rows read together.
 
 A stranded task cannot be retried — by Skyvern or by anyone. The only route to
 getting the customer their order is a new run, which is what an operator or the
@@ -103,9 +108,9 @@ customer will do.
 A new task starts with an **empty action history**. It navigates to the checkout
 page, sees the button, clicks it. **Two orders.**
 
-What prevents a repeat *within* a task is the action history Skyvern puts in the
-planner's prompt. That history does not cross tasks, so the remediation for
-finding 1 removes the thing that was preventing finding 2.
+**Impact.** The remediation for finding 1 *is* the duplicate. Someone clears a
+stuck run and charges the customer a second time, and the two events look
+unrelated in any log — a stuck task here, a new successful run there.
 
 ## 3. The running-step check is read-then-act, and it races
 
@@ -113,58 +118,32 @@ Two processes on one unclaimed task both read "no running steps", both proceed,
 both click. **Two orders.** There is no lock between the check at `:1542` and the
 `running` write at `agent.py:3819`.
 
-This models a redelivered queue message, or two workers claiming one task.
-
----
+**Impact.** A redelivered queue message or a duplicate dispatch — ordinary in any
+worker pool — charges the customer twice, with both runs reporting success.
 
 ## 4. A crash mid-sequence leaves irreversible work half-done
 
-The row where a lock is not enough
-
-The six rows above all reduce to *press one button exactly once*. That is mutual
-exclusion, and mutual exclusion is cheap — a leases table in the Postgres
-Skyvern already runs would do it. This row is on different ground.
-
-A checkout becomes three separately-irreversible operations in one action batch.
-The process dies between the second and the third.
+The row where a lock is not enough. Three separately-irreversible operations in
+one action batch; the process dies between the second and the third.
 
 ```
-  operation                             Skyvern   + CellaFlow   correct
-  ---------------------------------------------------------------------
-  reserve stock                               1             1         1
-  charge card                                 1             1         1
-  send confirmation                           0             1         1
-                                        stranded      completes
+  reserve stock        1
+  charge card          1
+  send confirmation    0     and no retry can ever send it
 ```
 
-**Skyvern does not duplicate here. It strands the sequence half-done.** The
-card is charged, the stock is held, and the confirmation is never sent — and
-because the dead worker's step is still `running`, no retry can ever finish it.
-The customer has paid and will never hear anything.
+**Impact.** The worst outcome in this document. The customer has paid, the stock
+is committed, and the confirmation will never be sent. The order exists in the
+payment processor and nowhere in any completion path. Nobody is notified, and the
+stranding means no automatic recovery is possible.
 
-**Both leases are load-bearing, and that is the point of the row.** The
-execution lease proves the previous holder stopped heartbeating, which licenses
-clearing its step and lets the retry proceed at all. The operation leases then
-supply what a lock cannot: `reserve` and `charge` return their *stored results*
-rather than being performed again.
-
-A distributed lock supplies only the first half. It would unstick the task and
-then re-run the batch from the top, because a lock records who is holding it and
-not what the work returned. That reasoning is not measured here — no lock arm
-was built — but it is the whole distinction the row exists to draw: clearing a
-dead holder's claim is mutual exclusion, and knowing that `charge` already
-returned is not.
-
-The batch shape is deliberate. `step.output` is written when a step *ends*, so
-three separate steps would leave a populated action history and the retry would
-correctly skip the first two on its own. Only a crash inside a single batch
-loses it — which is also why the planner here reads Skyvern's action history and
-skips anything already listed: on this crash it comes back empty, and the result
-is about Skyvern rather than about a stub ignoring what it was given.
+Note this is not a duplicate problem. Skyvern does not repeat the charge here —
+it simply never finishes, which is a different failure and in most businesses a
+worse one.
 
 ## The record survives. The planner is not shown it.
 
-This is the cheapest thing on this page to fix, and it changes more than one row.
+The cheapest thing on this page to fix, and it changes more than one row.
 
 Skyvern persists an action **inside** `handle_action`, before that function
 returns (`webeye/actions/handler.py:4925`):
@@ -192,8 +171,8 @@ for window_step in window_steps:
     if window_step.output and window_step.output.actions_and_results:
 ```
 
-`step.output` is written when a step *ends*. A crash mid-step never writes it.
-So the retry's first prompt reads:
+`step.output` is written when a step *ends*. A crash mid-step never writes it. So
+the retry's first prompt reads:
 
 ```
 Action history from previous steps:
@@ -201,28 +180,26 @@ Action history from previous steps:
 ```
 
 **Skyvern knows the click happened and does not tell the planner.** The model is
-asked to decide what to do next with no record of what it already did, on a page
-that still shows the button — and a model with no other information clicks it.
+asked what to do next with no record of what it already did, on a page that still
+shows the button — and a model with no other information clicks it.
 
-Sourcing that history from the `actions` rows, which already exist and already
-carry `status` and `element_id`, would close it without new infrastructure. It
-would not fix findings 1 or 3, which are about ownership rather than memory. It
-would change the two rows that are about memory.
+**Impact, and it is the constructive one.** Sourcing that history from the
+`actions` rows, which already exist and already carry `status` and `element_id`,
+closes the memory rows with no new infrastructure and no new dependency. It would
+not fix findings 1, 3 or 4, which are about ownership rather than memory.
 
-## What Skyvern does guard, measured
+## What Skyvern guards correctly, measured
 
-Tested and found sound, which is worth stating precisely because the rows above
-are the exceptions:
+Tested and found sound. Worth stating precisely, because the rows above are the
+exceptions rather than the rule:
 
 - **Repeat actions within a task.** The planner's prompt carries prior actions
-  and their results — `{"action_type": "click", "status": "completed",
-  "element_id": "AAAC"}` with `{"result": {"success": true}}` — alongside the
-  changed URL. A model reading that will not re-click. The defence holds for
-  every scenario inside a single task.
+  and their results alongside the changed URL. A model reading that will not
+  re-click. The defence holds for every scenario inside a single task.
 - **Completed tasks.** Cannot be re-run: `invalid_task_status:completed`.
-- **A failed action mid-batch.** Does not force a step retry. The step completes
+- **A failed action mid-batch.** Does not force a step retry; the step completes
   and execution continues (`stop_execution_on_failure: False`), so earlier
-  successful actions in the batch are not repeated.
+  successful actions are not repeated.
 - **Run creation.** The `create_workflow` idempotency key dedups the request that
   starts a run (`routes/agent_protocol.py:998`).
 
@@ -234,7 +211,8 @@ adds `interim_side_effects_progress` and `final_side_effects_progress` to
 a retried run does not re-send its completion webhook.
 
 One side effect, made durable across retries, at workflow-run-attempt
-granularity. The three findings above sit a layer in from it.
+granularity. The findings above sit a layer in from it — same reasoning, applied
+to the actions inside a run rather than the webhook after it.
 
 ## Run it
 
@@ -245,7 +223,7 @@ git clone https://github.com/Skyvern-AI/skyvern && (cd skyvern && git checkout d
 DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@localhost:5440/skyvern \
   alembic -c skyvern/alembic.ini upgrade head
 
-python -m venv venv && ./venv/bin/pip install "./skyvern[server]"
+python -m venv venv && ./venv/bin/pip install -r requirements.txt
 ./venv/bin/playwright install chromium
 
 ./venv/bin/python checkout_server.py 8899 &
@@ -258,7 +236,7 @@ The control row is load-bearing: one run, no crash, one order. If it reads
 anything else, every other row is a harness fault and the run says so.
 
 Orders are counted from `ledger.jsonl`, which the checkout server appends and
-fsyncs inside the POST handler, before responding. A run cannot avoid a count by
+fsyncs inside the POST handler before responding. A run cannot avoid a count by
 dying after the order.
 
 **The one Skyvern setting changed** is `ALLOWED_HOSTS=["127.0.0.1"]`, because
@@ -278,8 +256,5 @@ and changes nothing about action execution, persistence or retry.
 
 ---
 
-Built alongside [CellaFlow](https://github.com/cellaflow/cellaflow-sdks), which
-leases tool calls so the record of an operation outlives the process performing
-it. The [crash benchmark](https://github.com/cellaflow/cellaflow-sdks/tree/main/examples/crash_benchmark)
-measures the same class of failure across four guards, including the rows where a
-lease buys nothing.
+[`../skyvern-with-cellaflow/`](../skyvern-with-cellaflow/) runs the identical
+harness with two leases added, and reports which of these rows move.

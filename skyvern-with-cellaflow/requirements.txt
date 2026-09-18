@@ -3,7 +3,7 @@
 skyvern[server] @ git+https://github.com/Skyvern-AI/skyvern.git@d23ceb40f5b9e6532efbfd6eed2cc03e7502cc7c
 
 # The integration itself.
-cellaflow>=0.6.0
+cellaflow>=0.7.0
 
 # Chromium is not a pip dependency. After installing, run:
 #   playwright install chromium
