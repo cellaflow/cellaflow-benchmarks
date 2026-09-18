@@ -1,4 +1,4 @@
-# The same Skyvern, with two leases
+# The same Skyvern, with an execution lease and a lease per operation
 
 Identical harness, identical scenarios, identical canned planner, identical
 Skyvern v1.0.53 at `d23ceb4` as [the audit one level up](../). The only difference is
@@ -52,7 +52,8 @@ right.
 ## What actually changes for a customer
 
 What the customer experiences in each case, running Skyvern on its own versus
-Skyvern with the two leases added:
+Skyvern with an execution lease over the task and a lease on each irreversible
+operation:
 
 | what goes wrong | Skyvern alone | Skyvern + CellaFlow |
 | :--- | :--- | :--- |
@@ -112,12 +113,61 @@ doing its part:
 [driver] lease returned a prior result for charge; not repeating it
 ```
 
-A distributed lock supplies only the first of those lines. It would unstick the
-task and then re-run the batch from the top, because a lock records who is
-holding it and not what the work returned. That reasoning is not measured here —
-no lock arm was built — but it is the distinction the row exists to draw:
-clearing a dead holder's claim is mutual exclusion, and knowing that `charge`
-already returned is not.
+**The row was run a third time to see which lease does what**, with the
+per-operation leases switched off and the execution lease left on:
+
+Three configurations, each adding to the one before it:
+
+- **Skyvern** — as shipped, no leases.
+- **+ execution lease** — one lease over the task, heartbeated.
+- **+ operation leases** — that same execution lease, **plus** one lease on each
+  irreversible operation.
+
+```
+  operation            Skyvern   + execution lease   + operation leases   correct
+  --------------------------------------------------------------------------------
+  reserve stock              1                   2                    1         1
+  charge card                1                   2                    1         1
+  send confirmation          0                   1                    1         1
+```
+
+The third column is cumulative — it has both kinds. Operation leases *without*
+the execution lease was never run and would not help: with nothing to clear the
+dead holder's step, the retry never executes at all, so it would read `1, 1, 0`
+like the first column.
+
+Reading the `execution lease only` column, which is the one worth understanding:
+
+1. The first worker reserves stock, charges the card, and dies.
+2. Its lease stops being renewed, so the retry can prove the holder is gone and
+   clear the step it left `running`. The log shows
+   `cleared 1 stale running step(s)`. **The task un-sticks**, where Skyvern on
+   its own leaves it dead.
+3. The retry then runs the batch again — and nothing anywhere records that
+   reserve and charge already completed. Zero cache hits. It performs all three.
+4. Stock reserved twice, **card charged twice**, confirmation sent once.
+
+So arbitrating ownership on its own does not fix this row. It converts a
+stranded task into a double charge — a different failure, not a solved one.
+
+**What that column stands for.** Any mechanism that answers *is anyone else
+working on this* and releases when the holder dies: a `pg_advisory_lock`, a
+Redis lock, a TTL'd leases table in the Postgres Skyvern already runs. None of
+them answer *what did the work return*, which is the question that decides
+whether the card is charged again.
+
+It is a proxy for that class, not for any one of them. An advisory lock in
+particular differs elsewhere — its liveness is connection liveness rather than a
+heartbeat, it pins a database connection for the whole operation, and it carries
+no fencing token. On *this* row those differences do not change the outcome,
+because the only properties in play are ownership with reclaim, and no record of
+results.
+
+The `+ operation leases` column adds the second property. Note the counts: this
+row holds **one** execution lease, keyed on the task, and **three** operation
+leases — `reserve:ORD-x`, `charge:ORD-x`, `confirm:ORD-x`, one per irreversible
+call. The retry asks whether `charge` for this order already completed, gets the
+stored answer back, and skips it.
 
 **Crash after the click — a trade, not a win.** Skyvern places one order and
 strands the task forever; with the lease the task finishes and there are two
