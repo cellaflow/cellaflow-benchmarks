@@ -51,13 +51,16 @@ right.
 
 ## What actually changes for a customer
 
-| situation | before | after |
+What the customer experiences in each case, running Skyvern on its own versus
+Skyvern with the two leases added:
+
+| what goes wrong | Skyvern alone | Skyvern + CellaFlow |
 | :--- | :--- | :--- |
-| crash mid-sequence | **charged, no confirmation, unrecoverable** | order completes |
-| crash before any action | request silently dropped | retry completes it |
-| two workers get the task | **charged twice** | charged once |
-| crash after an action | one order, task dead forever | order completes, **second charge** |
-| operator restarts a stuck run | **charged twice** | **charged twice** |
+| crash part-way through a multi-step checkout | **charged, no confirmation ever sent, unrecoverable** | order completes |
+| crash before the agent acts | request silently dropped, nobody notified | retry completes it |
+| two workers pick up the same task | **charged twice** | charged once |
+| crash immediately after the agent acts | one order, but the task is dead forever | order completes, **charged twice** |
+| someone restarts a stuck run by hand | **charged twice** | **charged twice** |
 
 Three situations stop costing anything. One trades a dead task for a duplicate.
 One is unchanged.
