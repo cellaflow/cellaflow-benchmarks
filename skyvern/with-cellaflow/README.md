@@ -112,12 +112,29 @@ doing its part:
 [driver] lease returned a prior result for charge; not repeating it
 ```
 
-A distributed lock supplies only the first of those lines. It would unstick the
-task and then re-run the batch from the top, because a lock records who is
-holding it and not what the work returned. That reasoning is not measured here —
-no lock arm was built — but it is the distinction the row exists to draw:
-clearing a dead holder's claim is mutual exclusion, and knowing that `charge`
-already returned is not.
+**Each lease was measured separately on this row**, by running it again with the
+per-operation leases switched off and the execution lease left on:
+
+```
+  operation            Skyvern   execution lease only   both leases   correct
+  ---------------------------------------------------------------------------
+  reserve stock              1                      2             1         1
+  charge card                1                      2             1         1
+  send confirmation          0                      1             1         1
+                      stranded          un-stranded,
+                                       and duplicated
+```
+
+The middle column is the whole argument. Mutual exclusion with liveness — which
+is all a distributed lock is, and what a leases table in Postgres would give you
+— **unsticks the task and then charges the card a second time.** It clears the
+dead holder's claim (`cleared 1 stale running step(s)`) and records zero cache
+hits, because a lock has nowhere to put a result. The retry re-runs the batch
+from the top.
+
+Knowing that `charge` already returned is a different property from knowing
+nobody else is running. That is the distinction this row exists to draw, and it
+is measured rather than argued.
 
 **Crash after the click — a trade, not a win.** Skyvern places one order and
 strands the task forever; with the lease the task finishes and there are two

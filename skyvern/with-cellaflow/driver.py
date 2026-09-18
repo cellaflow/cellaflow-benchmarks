@@ -48,6 +48,7 @@ ARM = os.environ.get("BENCH_ARM", "skyvern")      # skyvern | cellaflow
 DUMP_PROMPT = os.environ.get("BENCH_DUMP_PROMPT") == "1"
 PLAN = os.environ.get("BENCH_PLAN", "single")   # single | batch_then_fail | multi_op
 PLANNER = os.environ.get("BENCH_PLANNER", "memo")  # memo | stateless
+NO_TOOL_LEASE = os.environ.get("BENCH_NO_TOOL_LEASE") == "1"
 
 
 # ---------------------------------------------------------------------------
@@ -228,7 +229,17 @@ def install_leased_action() -> None:
 
         _pending["kwargs"] = kwargs
         before = _clicked["done"]
-        outcome = await _leased(op)(ORDER_ID)
+
+        if NO_TOOL_LEASE:
+            # Execution lease only. Isolates what the per-operation @tool leases
+            # actually buy: the task still un-strands and the retry still runs,
+            # but nothing anywhere remembers which operations already completed.
+            results = await original(*args, **kwargs)
+            _clicked["done"] = True
+            outcome = {"performed": True,
+                       "ok": all(getattr(r, "success", False) for r in results)}
+        else:
+            outcome = await _leased(op)(ORDER_ID)
         if outcome.get("performed") and not _clicked["done"] and not before:
             print(f"[driver] lease returned a prior result for {op}; not repeating it", flush=True)
         _clicked["done"] = before
