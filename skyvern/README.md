@@ -21,8 +21,17 @@ costs nothing. Skyvern v1.0.53, commit `d23ceb4`.
     send confirmation                        0        1   sequence stranded
 ```
 
-**Two of the seven rows are correct.** What the other five cost, in order of how
-much they cost:
+**A row is correct when the customer ends up with exactly one order and the task
+finishes.** Both halves matter: a right order count on a task that can never
+complete is not a correct outcome, because nothing downstream ever learns the
+work succeeded.
+
+By that measure Skyvern gets **two of seven** — the control, where nothing goes
+wrong, and the mid-batch failure, which it handles properly. Setting the control
+aside as a harness check rather than a test of anything: **of the six rows where
+something actually fails, one ends correctly.**
+
+Here is what the other five cost, worst first:
 
 | what happens | what it costs |
 | :--- | :--- |

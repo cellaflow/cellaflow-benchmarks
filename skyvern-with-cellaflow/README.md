@@ -20,7 +20,34 @@ Skyvern v1.0.53 at `d23ceb4` as [the audit](../skyvern/). The only difference is
     send confirmation                       0          1         1   fixed
 ```
 
-**Fully correct rows: 2 of 7 → 5 of 7.**
+## What that table says
+
+A row is correct when the customer ends up with exactly one order **and** the
+task finishes. A right order count on a permanently dead task does not count,
+because nothing downstream ever learns the work succeeded.
+
+The control row is a harness check — nothing fails in it and both columns pass —
+so the honest comparison excludes it. **Of the six rows where something actually
+goes wrong, Skyvern handles one correctly. With the leases, four.**
+
+**Three rows move:**
+
+- *crash before the click* — a silently dropped request becomes a completed order
+- *two processes, one task* — a double charge becomes a single one
+- *three operations, crash between two and three* — a customer who paid and never
+  heard anything gets their confirmation
+
+**Two do not, and they fail for different reasons:**
+
+- *crash after the click* — **not fixed, traded.** A permanently dead task
+  becomes a second charge. Both are wrong; they are wrong in different
+  directions, and only one leaves you something to reconcile.
+- *operator reruns* — **unchanged.** The crash lands between the click and the
+  commit, so nothing anywhere recorded it. No lease can bracket a side effect
+  that is not a database write.
+
+The one row Skyvern already gets right — a failed action mid-batch — stays
+right.
 
 ## What actually changes for a customer
 
