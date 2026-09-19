@@ -11,8 +11,8 @@ turn.
                                     reserve charge confirm   reserve charge confirm
   ---------------------------------------------------------------------------------
   control, no crash                       1      1       1         1      1       1
-  crash after an operation, then retry    2      2       1         1      1       1
-  crash inside an operation, then retry   2      2       1         1      2       1
+  crash after an operation, then retry    2      2       1         1      2       1
+  crash between operations, then retry    2      2       2         1      1       1
 ```
 
 Correct is `1, 1, 1` in every row.
@@ -21,13 +21,13 @@ Correct is `1, 1, 1` in every row.
 
 | what goes wrong | Cua alone | Cua + operation leases |
 | :--- | :--- | :--- |
-| crash after the card is charged | **charged twice, stock reserved twice** | each done once |
-| crash *while* the card is charging | **charged twice** | **charged twice** |
+| crash in the gap between two operations | **all three repeated — charged twice, confirmed twice** | each done once |
+| crash the instant the card is charged | **charged twice, stock reserved twice** | stock reserved once, **still charged twice** |
 
-One row fixed, one unchanged. The difference between them is the whole of what a
-lease can and cannot do.
+One row fixed outright, one improved but not closed. The difference between them
+is the whole of what a lease can and cannot do.
 
-## Why the first row moves
+## Why the second row moves
 
 A retry is a fresh process with no memory, and Cua keeps no durable record of
 which operations completed — trajectory capture is a debugging artifact. So the
@@ -44,11 +44,15 @@ operation again:
 
 Only `confirm`, which never ran, executes.
 
-## Why the second row does not
+## Why the first row does not close
 
-The crash lands *inside* the charge — after the money moves, before the lease
-commits. Nothing anywhere recorded it, so the retry has nothing to match
-against and charges again.
+The crash lands the instant the charge completes — after the money moves,
+before the lease commits. Nothing anywhere recorded it, so the retry has
+nothing to match against and charges again.
+
+The row still improves: `reserve` completed and committed earlier in the run,
+so its lease holds and the stock is reserved once instead of twice. Only the
+operation the crash landed on repeats.
 
 **No lease closes this.** The charge is not a database write, so nothing can
 bracket it, and making the record transactional is strictly worse: the write

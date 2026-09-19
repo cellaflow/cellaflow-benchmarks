@@ -12,14 +12,16 @@ No VM, no Lume, no display server, no API key, no LLM spend.
   scenario                                      reserve  charge  confirm
   --------------------------------------------------------------------
   control, no crash                                   1       1        1
-  crash after an operation, then retry                2       2        1
+  crash after an operation, then retry                2       2        1  <--
+  crash between operations, then retry                2       2        2  <--
 ```
 
 The agent's job is three separately-irreversible operations: reserve stock,
-charge the card, send the confirmation. The process is killed the instant the
-card is charged. A supervisor retries the same order.
+charge the card, send the confirmation. The process is killed mid-run. A
+supervisor retries the same order.
 
-**The card is charged twice, and the stock is reserved twice.**
+**The card is charged twice in both crash rows.** Where the crash lands only
+decides how much else is repeated with it.
 
 ## What each row is
 
@@ -27,9 +29,14 @@ card is charged. A supervisor retries the same order.
 row exists to prove the harness works — anything else and every other number is
 a fault in the test, not a finding about Cua.
 
-**crash after an operation, then retry.** The process dies immediately after the
+**crash after an operation, then retry.** The process dies the instant the
 charge lands. A second run retries the same order, which is what a worker pool
 or a supervisor does. **Correct is each operation exactly once.**
+
+**crash between operations, then retry.** The process dies in the gap after the
+charge has completed and before the confirmation starts. The retry repeats all
+three, so the confirmation goes out twice as well — the only row where every
+operation is duplicated.
 
 ## Why it repeats
 

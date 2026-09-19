@@ -55,8 +55,7 @@ def main() -> int:
 
     rows = [scenario("control, no crash")]
     rows.append(scenario("crash after an operation, then retry", die_after="charge"))
-    if "BENCH_HAS_LEASES" in os.environ:
-        rows.append(scenario("crash between operations, then retry", die_between="charge"))
+    rows.append(scenario("crash between operations, then retry", die_between="charge"))
 
     bad = 0
     for name, c in rows:
