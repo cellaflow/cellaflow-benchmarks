@@ -122,6 +122,53 @@ loser fails and writes nothing; under a grace-window provider both writes carry
 a working token. Concurrency costs a failed request or a wasted exchange. It
 takes a crash to break the integration.
 
+## Two replicas is the conservative case. Agents are the likely one.
+
+**This harness runs two replicas of one service, and that is a deliberate
+choice, not a claim about where the contention comes from.** Two identical
+processes are the only way to produce the race deterministically: same code,
+same timing, reproducible on every run. Anything less predictable would make the
+rows a coin flip.
+
+The contention itself is not a property of replicas. It is a property of **one
+credential with more than one caller**, and Corsair's own README names the shape
+that produces most of them:
+
+> Build anything, from an agent working across all your integrations to a
+> multi-tenant dashboard for your users to connect to anything.
+
+An agent working across a tenant's integrations holds exactly one credential per
+integration. Two agents acting for that tenant, or one agent that a supervisor
+fanned out, or an agent and a scheduled sync, all reach the same stored token
+through the same key manager. From `singleFlight`'s point of view they are
+indistinguishable from two replicas, because the `WeakMap` it dedupes against is
+per-process either way.
+
+**Three things make agents the harder case rather than an equivalent one**, and
+none of them is measured here:
+
+- **They arrive at unpredictable times and in unpredictable numbers.** Two
+  replicas race in a window you can reason about. N agents racing is a
+  distribution, and the tail is where a stale credential is read.
+- **They do not know about each other.** Replicas of one service at least share a
+  deployment and a config. Agents spawned by different triggers have no reason to
+  coordinate and no channel to do it on.
+- **They are correlated, not independent.** Anthropic's multi-agent research
+  found agents converge rather than diverge: 18 of 30 independently chose an
+  identical git branch name, and "when one agent makes a bad decision, it is
+  likely that many agents will make that same bad decision". Correlated arrival
+  is worse than random arrival for a shared credential, because it clusters the
+  callers into the same instant instead of spreading them out.
+
+**What this means for the numbers above:** they are a floor. Two replicas is the
+smallest interesting concurrency and the easiest to reproduce. More callers make
+every row worse, not different, and agents are the reason there would be more.
+
+What would change the analysis, and is not measured, is an agent doing something
+a replica never does: requesting a *different* operation on the same credential
+at the same moment. That is a divergence question rather than a duplication one,
+and this harness does not answer it.
+
 ## Run it
 
 ```bash
@@ -148,6 +195,8 @@ and the copy is byte-for-byte theirs.
   being asserted as typical.
 - The crash is injected at a chosen boundary. A real crash lands wherever it
   lands; the two rows bracket the interesting range.
-- Whether a given deployment runs more than one replica is a question about
-  their users' infrastructure, not about Corsair's code. The finding is that
-  nothing in the library notices if they do.
+- Whether a given deployment has more than one caller per credential is a
+  question about their users' architecture, not about Corsair's code. The
+  finding is that nothing in the library notices if it does.
+- The agent framing above is reasoning from the measurement, not a second
+  measurement. Nothing here runs an LLM.
