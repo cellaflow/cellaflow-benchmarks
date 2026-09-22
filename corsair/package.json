@@ -1,0 +1,13 @@
+{
+  "name": "corsair-oauth-refresh-benchmark",
+  "private": true,
+  "type": "module",
+  "description": "Does a concurrent OAuth token refresh survive more than one process?",
+  "dependencies": {
+    "better-sqlite3": "^12.0.0",
+    "kysely": "^0.27.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}
