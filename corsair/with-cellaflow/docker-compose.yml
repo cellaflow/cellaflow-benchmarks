@@ -1,0 +1,21 @@
+# The only service this arm needs. Corsair drives a fake OAuth provider
+# in-process, so there is no VM and no third-party account: the engine is here
+# purely to hold one lease across two processes.
+services:
+  cellaflow:
+    image: ghcr.io/cellaflow/cellaflow:latest
+    environment:
+      CELLAFLOW_HOST: "::"
+      CELLAFLOW_DB_PATH: /data/cellaflow
+    ports: ["50051:50051", "9090:9090"]
+    healthcheck:
+      # No wget or curl in the image; bash can open a socket. Greps for 200
+      # because /health/ready answers 503 until boot recovery completes.
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/9090 && printf "GET /health/ready HTTP/1.0\r\n\r\n" >&3 && grep -q "200 OK" <&3'
+      interval: 2s
+      timeout: 3s
+      retries: 30

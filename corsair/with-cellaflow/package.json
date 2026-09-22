@@ -1,0 +1,13 @@
+{
+  "name": "corsair-oauth-refresh-benchmark-with-cellaflow",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cellaflow/sdk": "^0.7.1",
+    "better-sqlite3": "^12.0.0",
+    "kysely": "^0.27.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}
