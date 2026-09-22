@@ -18,22 +18,20 @@ That does three things together, and the third is the one a lock cannot copy: it
 admits one caller, it records what that caller produced, and it hands that record
 to whoever asks next.
 
-```
-  scenario                            Corsair       + CellaFlow
-                                   fail broken     fail broken
-  ---------------------------------------------------------------
-  control, one process              0/5   0/5       0/5   0/5
-  two processes, strict provider    5/5   0/5       0/5   0/5
-  two processes, grace-window       0/5   0/5       0/5   0/5
-  crash before anything records it  5/5   5/5       5/5   5/5
-  crash after the exchange recorded 5/5   5/5       0/5   0/5
-```
+| what goes wrong | Corsair alone | with CellaFlow |
+| :--- | :--- | :--- |
+| nothing, one process | correct | correct |
+| two replicas, strict provider | **a user request fails, every run** | correct |
+| two replicas, grace-window provider | **credential spent twice per expiry** | spent once |
+| crash before anything records it | **integration broken, every run** | **broken, every run** |
+| crash after the exchange is recorded | **integration broken, every run** | **recovers, every run** |
 
-Five runs per row. The grace-window row also drops from 2.0 exchanges to 1.0.
+Five runs per row. "Integration broken" means the stored credential no longer
+works and the end user has to reconnect the app.
 
 ## The row that separates this from a lock
 
-**`crash after the exchange is recorded`: 5/5 broken becomes 0/5.**
+**`crash after the exchange is recorded`: broken every run becomes correct every run.**
 
 A process takes the lease, spends the refresh token, records what it received,
 and dies before writing it into Corsair's store. The retry asks for the lease,
@@ -54,7 +52,7 @@ it, a reader supplies the objection themselves and never sees it answered.
 
 ## The row that nothing fixes
 
-**`crash before anything records it`: 5/5 broken, in every arm including this
+**`crash before anything records it`: broken every run, in every arm including this
 one.**
 
 If the process dies between the provider rotating the token and anything
@@ -74,15 +72,13 @@ The first thing a competent engineer reaches for on reading Corsair's comment is
 of this benchmark, then removed as code and kept here, because the result is more
 useful than the directory was.
 
-```
-  scenario                              Corsair    + pg_advisory_lock   + CellaFlow
-  --------------------------------------------------------------------------------
-  control, one process                   clean           clean             clean
-  two processes, strict provider      5/5 failed         clean             clean
-  two processes, grace-window         2.0 exchanges      clean             clean
-  crash before anything records it    5/5 broken      5/5 broken        5/5 broken
-  crash after the exchange recorded   5/5 broken      5/5 broken        0/5, recovers
-```
+| what goes wrong | Corsair alone | + `pg_advisory_lock` | with CellaFlow |
+| :--- | :--- | :--- | :--- |
+| nothing, one process | correct | correct | correct |
+| two replicas, strict provider | **request fails** | correct | correct |
+| two replicas, grace-window provider | **spent twice** | correct | correct |
+| crash before anything records it | **broken** | **broken** | **broken** |
+| crash after the exchange is recorded | **broken** | **broken** | **recovers** |
 
 **A lock closes every concurrency row and neither crash row.**
 

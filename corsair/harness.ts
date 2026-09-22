@@ -126,9 +126,9 @@ async function main(): Promise<number> {
   console.log("  The provider rotates its refresh token and invalidates the previous one.");
   console.log();
   console.log(
-    `  ${"scenario".padEnd(38)}${"refreshes".padStart(11)}${"failed calls".padStart(14)}${"torn".padStart(8)}${"broken".padStart(9)}`,
+    `  ${"scenario".padEnd(40)}${"exchanges".padStart(10)}   what happened`,
   );
-  console.log("  " + "-".repeat(80));
+  console.log("  " + "-".repeat(84));
 
   const rows: Row[] = [
     await scenario("control, one process", 1),
@@ -144,11 +144,18 @@ async function main(): Promise<number> {
     const failed = r.trials.filter((t) => t.rejected > 0).length;
     const broken = r.trials.filter((t) => !t.alive).length;
     const torn = r.trials.filter((t) => t.torn).length;
-    const bad = avg !== "1.0" || failed > 0 || broken > 0 || torn > 0;
-    console.log(
-      `  ${r.name.padEnd(38)}${avg.padStart(11)}${`${failed}/${n}`.padStart(14)}` +
-        `${`${torn}/${n}`.padStart(8)}${`${broken}/${n}`.padStart(9)}${bad ? "  <--" : ""}`,
-    );
+
+    // Say what happened in words. A column of fractions makes the reader hold
+    // the denominator and its direction in their head, and every row here means
+    // something different to a customer.
+    const notes: string[] = [];
+    if (broken > 0) notes.push(`INTEGRATION BROKEN, ${broken} of ${n} runs`);
+    if (failed > 0) notes.push(`a user request failed, ${failed} of ${n} runs`);
+    if (torn > 0) notes.push(`credential torn, ${torn} of ${n} runs`);
+    if (Number(avg) > 1) notes.push(`token spent ${avg} times per expiry`);
+    const what = notes.length ? notes.join("; ") : "correct";
+
+    console.log(`  ${r.name.padEnd(40)}${avg.padStart(10)}   ${what}`);
   }
 
   provider.kill();
@@ -160,12 +167,14 @@ async function main(): Promise<number> {
     console.log("  working. It did not, so every other row is a harness fault.");
     return 1;
   }
-  console.log(`  ${REPEATS} runs per row. Correct is 1.0 refreshes and 0 everywhere else.`);
-  console.log("  A failed call is a user request that errored with invalid_grant.");
-  console.log("  Torn means the stored access_token and refresh_token came from two");
-  console.log("  different refreshes, merged over each other by a lost update.");
-  console.log("  A broken connection means the stored refresh_token no longer works,");
-  console.log("  so the end user has to reconnect the app.");
+  console.log(`  ${REPEATS} runs per row. Correct is one exchange and nothing else.`);
+  console.log();
+  console.log("  INTEGRATION BROKEN     the stored credential no longer works, so the end");
+  console.log("                         user has to reconnect the app");
+  console.log("  a user request failed  a caller got invalid_grant back");
+  console.log("  credential torn        the stored access and refresh tokens came from two");
+  console.log("                         different exchanges, merged over each other");
+  console.log("  token spent N times    one expiry cost more than one exchange");
   console.log();
   return 0;
 }

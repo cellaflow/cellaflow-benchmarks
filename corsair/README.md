@@ -9,36 +9,36 @@ fake so the run is deterministic and costs nothing, and a file-backed SQLite in
 place of Corsair's `:memory:` test database, because an in-memory database
 cannot be shared between processes.
 
-```
-  scenario                                refreshes  failed calls    torn   broken
-  --------------------------------------------------------------------------------
-  control, one process                          1.0           0/5     0/5      0/5
-  two processes, strict provider                1.0           5/5     0/5      0/5
-  two processes, grace-window provider          2.0           0/5     0/5      0/5
-  crash before anything records it              1.0           5/5     0/5      5/5
-  crash after the exchange is recorded          1.0           5/5     0/5      5/5
-```
+| what goes wrong | exchanges | what it costs the customer |
+| :--- | :---: | :--- |
+| nothing, one process | 1.0 | correct |
+| two replicas, strict provider | 1.0 | **a user request fails, every run** |
+| two replicas, grace-window provider | **2.0** | the credential is spent twice for one expiry |
+| crash before anything records it | 1.0 | **integration broken, every run** |
+| crash after the exchange is recorded | 1.0 | **integration broken, every run** |
 
-Five runs per row. **Correct is 1.0 refreshes and zero everywhere else.**
+Five runs per row. **Correct is one exchange and nothing else.** "Integration
+broken" means the stored credential no longer works, so the end user has to go
+and reconnect the app.
 
 One tenant has one expired access token. Four concurrent callers inside each
 process ask for it.
 
-## What each column is
+## What is being counted
 
-**refreshes** is how many times the provider was asked to exchange a refresh
-token, counted from `ledger.jsonl`, which the provider appends and fsyncs before
-it responds. One expired credential should produce exactly one exchange.
+**exchanges** is how many times the provider was asked to swap a refresh token,
+counted from `ledger.jsonl`, which the provider appends and fsyncs before it
+responds. One expired credential should produce exactly one.
 
-**failed calls** is runs where a caller got `invalid_grant` back: a user request
-that errored.
+Three things can go wrong, and the harness names whichever occurred:
 
-**torn** is runs where the stored `access_token` and `refresh_token` came from
-two different exchanges. The provider always mints `aN` and `rN` together, so a
-mismatched pair can only be a lost update.
-
-**broken** is runs where the credential left in the database no longer works, so
-the end user has to reconnect the app.
+- **integration broken** is the severe one. The credential left in the database
+  no longer works, so the end user has to reconnect the app.
+- **a user request failed** means a caller got `invalid_grant` back.
+- **credential torn** means the stored `access_token` and `refresh_token` came
+  from two different exchanges. The provider always mints `aN` and `rN`
+  together, so a mismatched pair can only be a lost update. Not observed in any
+  run here, and reported only when it happens.
 
 ## What the rows show
 
