@@ -158,6 +158,26 @@ async function main(): Promise<number> {
     console.log(`  ${r.name.padEnd(40)}${avg.padStart(10)}   ${what}`);
   }
 
+
+  // Does the failure get worse with more callers, or does it plateau? The
+  // README claims the two-process rows are a floor, and that claim needs a
+  // number rather than an assertion.
+  console.log();
+  console.log(`  ${"callers on one credential".padEnd(40)}${"exchanges".padStart(10)}   what happened`);
+  console.log("  " + "-".repeat(84));
+
+  for (const procs of [2, 4, 8]) {
+    const r = await scenario(`${procs} replicas, strict provider`, procs);
+    const n = r.trials.length;
+    const avg = (r.trials.reduce((a, t) => a + t.calls, 0) / n).toFixed(1);
+    const failed = r.trials.reduce((a, t) => a + t.rejected, 0) / n;
+    const brokeN = r.trials.filter((t) => !t.alive).length;
+    const note = brokeN > 0
+      ? `INTEGRATION BROKEN, ${brokeN} of ${n} runs`
+      : `${failed.toFixed(1)} failed requests per run`;
+    console.log(`  ${r.name.padEnd(40)}${avg.padStart(10)}   ${note}`);
+  }
+
   provider.kill();
   console.log();
   const control = rows[0];

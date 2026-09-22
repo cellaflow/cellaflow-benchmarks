@@ -160,9 +160,27 @@ none of them is measured here:
   is worse than random arrival for a shared credential, because it clusters the
   callers into the same instant instead of spreading them out.
 
-**What this means for the numbers above:** they are a floor. Two replicas is the
-smallest interesting concurrency and the easiest to reproduce. More callers make
-every row worse, not different, and agents are the reason there would be more.
+**The numbers above are a floor, and the harness measures how much of one.**
+Same credential, same strict provider, more callers:
+
+| callers on one credential | exchanges | failed requests per run |
+| ---: | :---: | :---: |
+| 2 replicas | 1.0 | 1.0 |
+| 4 replicas | 1.0 | **5.4** |
+| 8 replicas | **1.4** | **14.4** |
+
+Failed requests grow **faster than the number of callers**: four times the
+callers produces five times the failures, eight times produces fourteen. And at
+eight the exchange count passes 1.0, which means a strict provider that revokes
+on reuse is now being asked to rotate the credential more than once per expiry.
+Each rotation invalidates the token every other caller is holding, so the
+failures compound rather than add.
+
+With the lease, all three rows read **1.0 exchanges and 0.0 failed requests**.
+The curve is flat because the contention is resolved before the provider is
+called rather than by the provider rejecting the losers.
+
+Agents are the reason a deployment would have more than two callers.
 
 What would change the analysis, and is not measured, is an agent doing something
 a replica never does: requesting a *different* operation on the same credential
@@ -198,5 +216,6 @@ and the copy is byte-for-byte theirs.
 - Whether a given deployment has more than one caller per credential is a
   question about their users' architecture, not about Corsair's code. The
   finding is that nothing in the library notices if it does.
-- The agent framing above is reasoning from the measurement, not a second
-  measurement. Nothing here runs an LLM.
+- The scaling table is measured. The claim that *agents* are what produce more
+  than two callers is reasoning from Corsair's own stated use case, not a
+  second measurement. Nothing here runs an LLM.
