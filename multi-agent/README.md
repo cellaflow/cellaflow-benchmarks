@@ -1,9 +1,32 @@
 # Multiple agents: what happens when two of them disagree
 
-**What this measures is how the idempotency key is derived.** All three rows
-below run identical agents against an identical gateway. The only thing that
-changes is which fields go into the key, and that alone decides whether the
-customer is refunded once or twice.
+This folder covers **one** multi-agent failure: two agents reaching different
+conclusions about the same work. The other two, several agents duplicating one
+action and contention worsening as callers are added, are measured against real
+code in [`../corsair/`](../corsair/).
+
+## The situation
+
+Two agents look at ticket `TICKET-x`. Agent A concludes the refund is **40**.
+Agent B concludes it is **35**. Neither is retrying the other and neither has
+failed: they reasoned separately and reached different answers, which is what
+non-deterministic reasoners do. The customer is owed one refund.
+
+Each agent is its own OS process. They share no memory, no session, and no
+channel to coordinate on.
+
+The other folders here audit a real product at a pinned commit. This one
+constructs the situation, because none of the four codebases audited so far can
+produce it: their shared work is a fetch or a refresh, where every caller wants
+the identical thing and there is nothing to disagree about. That absence is
+itself worth recording.
+
+## What is being measured
+
+**How the idempotency key is derived, and nothing else.** All three rows below
+run identical agents against an identical gateway. The only thing that changes
+is which fields go into the key, and that alone decides whether the customer is
+refunded once or twice.
 
 Under the shared scope the key is built from two things, and they do different
 jobs:
@@ -17,30 +40,14 @@ shared:{coordination_id}:{tool_name}:{hash of selected arguments}
 are collaborating on, a ticket here, and without it nothing converges across
 sessions at all: the SDK refuses to derive a shared key, because a shared scope
 with no domain would deduplicate two unrelated callers who happened to make the
-same call. Every guarded row below sets it to the same ticket.
+same call. Every guarded row below sets it to the same ticket, so it is held
+constant rather than varied.
 
-**Which arguments are hashed is the variable**, and it is the one thing this
-folder changes between rows. Getting it wrong is what the `ticket + amount` row
+**Which arguments are hashed is the variable.** It is the one thing this folder
+changes between rows, and getting it wrong is what the `ticket + amount` row
 shows.
 
-The other folders here audit a real product at a pinned commit. This one
-constructs the scenario, because none of the four codebases audited so far can
-produce it: their shared work is a fetch or a refresh, where every caller wants
-the identical thing and there is nothing to disagree about. That absence is
-itself worth recording.
-
-It covers **one** multi-agent failure, two agents reaching different conclusions
-about the same work. The other two, several agents duplicating one action and
-contention worsening as callers are added, are measured against real code in
-[`../corsair/`](../corsair/).
-
-Two agents look at ticket `TICKET-x`. Agent A concludes the refund is **40**.
-Agent B concludes it is **35**. Neither is retrying the other and neither has
-failed: they reasoned separately and reached different answers, which is what
-non-deterministic reasoners do. The customer is owed one refund.
-
-Each agent is its own OS process. They share no memory, no session, and no
-channel to coordinate on.
+## Results
 
 | what the idempotency key is built from | refunds | total paid | what happened |
 | :--- | :---: | :---: | :--- |
