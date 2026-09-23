@@ -70,7 +70,7 @@ async function arm(name: string, id: string): Promise<void> {
       : "one refund, the disagreement never surfaced";
 
   console.log(
-    `  ${name.padEnd(34)}${avgRefunds.toFixed(1).padStart(9)}${avgTotal.toFixed(0).padStart(9)}   ${note}`,
+    `  ${name.padEnd(36)}${avgRefunds.toFixed(1).padStart(9)}${avgTotal.toFixed(0).padStart(12)}   ${note}`,
   );
 }
 
@@ -83,18 +83,24 @@ async function main(): Promise<number> {
   console.log("  Neither is retrying the other. They reasoned separately and disagree.");
   console.log("  The customer is owed one refund.");
   console.log();
-  console.log(`  ${"guard".padEnd(34)}${"refunds".padStart(9)}${"paid".padStart(9)}   what happened`);
-  console.log("  " + "-".repeat(84));
+  console.log(
+    `  ${"what the idempotency key is".padEnd(36)}${"refunds".padStart(9)}${"total paid".padStart(12)}   what happened`,
+  );
+  console.log("  " + "-".repeat(90));
 
-  await arm("no guard", "none");
-  await arm("idempotency key on arguments", "hash-args");
-  await arm("key on the business fact", "shared-on");
+  await arm("no key at all, no guard", "none");
+  await arm("ticket + amount  (the default)", "hash-args");
+  await arm("ticket only, amount ignored", "shared-on");
 
   console.log();
-  console.log(`  ${REPEATS} runs per row. Correct is one refund.`);
+  console.log(`  ${REPEATS} runs per row. Correct is one refund, of either 40 or 35.`);
   console.log();
-  console.log("  Note what none of these rows says: which amount was right, or that");
-  console.log("  anyone was told the agents disagreed. Deduplication answers neither.");
+  console.log("  Row 2 is the point. Put the amount in the key and the two agents derive");
+  console.log("  DIFFERENT keys, so the cache sees two unrelated operations and lets both");
+  console.log("  through. Leave the amount out and they derive the same key, so one wins.");
+  console.log();
+  console.log("  Note what no row says: which amount was right, or that anyone was told");
+  console.log("  the agents disagreed. Deduplication answers neither question.");
   console.log();
   return 0;
 }

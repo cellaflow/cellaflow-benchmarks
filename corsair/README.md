@@ -9,7 +9,7 @@ fake so the run is deterministic and costs nothing, and a file-backed SQLite in
 place of Corsair's `:memory:` test database, because an in-memory database
 cannot be shared between processes.
 
-| what goes wrong | exchanges | what it costs the customer |
+| what goes wrong | token swaps | what it costs the customer |
 | :--- | :---: | :--- |
 | nothing, one process | 1.0 | correct |
 | two replicas, strict provider | 1.0 | **a user request fails, every run** |
@@ -26,9 +26,12 @@ process ask for it.
 
 ## What is being counted
 
-**exchanges** is how many times the provider was asked to swap a refresh token,
-counted from `ledger.jsonl`, which the provider appends and fsyncs before it
-responds. One expired credential should produce exactly one.
+**token swaps** is how many times the provider was asked to exchange the refresh
+token, counted from `ledger.jsonl`, which the provider appends and fsyncs before
+it responds. Each swap issues a new refresh token and revokes the old one, so
+one expired credential needs exactly one. Above 1.0 means the credential was
+rotated more than once for a single expiry, and every caller still holding the
+previous token now fails.
 
 Three things can go wrong, and the harness names whichever occurred:
 
@@ -163,20 +166,23 @@ none of them is measured here:
 **The numbers above are a floor, and the harness measures how much of one.**
 Same credential, same strict provider, more callers:
 
-| callers on one credential | exchanges | failed requests per run |
+| callers on one credential | token swaps | failed requests per run |
 | ---: | :---: | :---: |
-| 2 replicas | 1.0 | 1.0 |
-| 4 replicas | 1.0 | **5.4** |
-| 8 replicas | **1.4** | **14.4** |
+| 2 replicas | 1.0 | ~1 |
+| 4 replicas | 1.0 | **~5** |
+| 8 replicas | **~1.2** | **~14** |
+
+Approximate because this is a race and the figures move between runs; the shape
+is stable, the third decimal is not.
 
 Failed requests grow **faster than the number of callers**: four times the
-callers produces five times the failures, eight times produces fourteen. And at
-eight the exchange count passes 1.0, which means a strict provider that revokes
-on reuse is now being asked to rotate the credential more than once per expiry.
-Each rotation invalidates the token every other caller is holding, so the
-failures compound rather than add.
+callers produces around five times the failures, eight times around fourteen.
+And at eight, the swap count rises above 1.0, which means a strict provider that
+revokes on reuse is being asked to rotate the credential more than once for a
+single expiry. Each rotation invalidates the token every other caller is still
+holding, so the failures compound rather than add.
 
-With the lease, all three rows read **1.0 exchanges and 0.0 failed requests**.
+With the lease, all three rows read **1.0 token swaps and 0 failed requests**.
 The curve is flat because the contention is resolved before the provider is
 called rather than by the provider rejecting the losers.
 

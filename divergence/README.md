@@ -13,35 +13,42 @@ non-deterministic reasoners do. The customer is owed one refund.
 Each agent is its own OS process. They share no memory, no session, and no
 channel to coordinate on.
 
+| what the idempotency key is built from | refunds | total paid | what happened |
+| :--- | :---: | :---: | :--- |
+| nothing, no guard at all | 2.0 | 75 | **both agents refunded, every run** |
+| **ticket + amount**, the default | 2.0 | 75 | **both agents refunded, every run** |
+| **ticket only**, amount ignored | 1.0 | 35 or 40 | one refund, and nobody is told they disagreed |
+
+Five runs per row. **Correct is one refund**, of either 40 or 35.
+
+The third row's total is whichever agent won, and it changes between runs.
+
+## The finding: the default idempotency key does not help here
+
+The middle row is the one worth sitting with, and the mechanism is the whole
+story.
+
+An idempotency key derived from the tool's arguments is the standard answer,
+what most libraries give by default and what a team writes first. **It fails
+completely**, and it fails for a reason that is obvious once stated:
+
 ```
-  guard                               refunds     paid   what happened
-  ------------------------------------------------------------------------------------
-  no guard                                2.0       75   BOTH AGENTS REFUNDED, 5 of 5 runs
-  idempotency key on arguments            2.0       75   BOTH AGENTS REFUNDED, 5 of 5 runs
-  key on the business fact                1.0       38   one refund, the disagreement never surfaced
+agent A hashes  { ticket: "T-1", amount: 40 }  ->  key ...a3f1
+agent B hashes  { ticket: "T-1", amount: 35 }  ->  key ...7c92
 ```
 
-Five runs per row. **Correct is one refund.**
+**Different amounts produce different keys.** The cache sees two unrelated
+operations, grants both a lease, and both refund. The customer is out 75 on a
+ticket owed one refund.
 
-## The finding: idempotency does not help here
-
-The middle row is the one worth sitting with.
-
-An idempotency key derived from the tool's arguments is the standard answer, the
-one most libraries give by default and the one a team writes first. **It fails
-completely.** Agent A hashes `{ticket, amount: 40}` and agent B hashes
-`{ticket, amount: 35}`, so they derive **different keys**. The cache sees two
-unrelated operations, grants both a lease, and both refund. The customer is out
-75 on a ticket owed one refund.
-
-That is not a bug in the cache. It is doing exactly what it was asked: the two
-calls *are* different, by every input it was given. The identity of the work was
-never the arguments. It was the ticket.
+That is not a bug in the cache. It did exactly what it was asked: by every input
+it was given, the two calls *are* different. The identity of the work was never
+the arguments. It was the ticket.
 
 ## What fixes the duplication, and what it does not fix
 
-The third row keys on the business fact alone, deliberately excluding the amount
-from the hash:
+The third row builds the key from the ticket alone, deliberately leaving the
+amount out of the hash:
 
 ```ts
 tool(issueRefund, {
@@ -53,10 +60,9 @@ tool(issueRefund, {
 Both agents now derive one key, one refund happens, and the second agent adopts
 the first's result. The duplication is closed.
 
-**Look at what it cost: 38.** That is the average across five runs of a value
-that is only ever 40 or 35. **Which agent wins is a coin flip**, decided by
-whichever process reached the engine first. The customer gets a refund whose
-amount was chosen by a race.
+**Look at what it cost.** The amount paid is 40 in some runs and 35 in others.
+**Which agent wins is a coin flip**, decided by whichever process reached the
+engine first. The customer gets a refund whose amount was chosen by a race.
 
 And nobody is told. Not the agents, not the operator, not the ledger. The system
 converged, correctly and silently, on an answer it had no basis for preferring.

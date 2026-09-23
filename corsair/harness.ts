@@ -126,7 +126,7 @@ async function main(): Promise<number> {
   console.log("  The provider rotates its refresh token and invalidates the previous one.");
   console.log();
   console.log(
-    `  ${"scenario".padEnd(40)}${"exchanges".padStart(10)}   what happened`,
+    `  ${"scenario".padEnd(40)}${"token swaps".padStart(12)}   what happened`,
   );
   console.log("  " + "-".repeat(84));
 
@@ -155,7 +155,7 @@ async function main(): Promise<number> {
     if (Number(avg) > 1) notes.push(`token spent ${avg} times per expiry`);
     const what = notes.length ? notes.join("; ") : "correct";
 
-    console.log(`  ${r.name.padEnd(40)}${avg.padStart(10)}   ${what}`);
+    console.log(`  ${r.name.padEnd(40)}${avg.padStart(12)}   ${what}`);
   }
 
 
@@ -163,7 +163,7 @@ async function main(): Promise<number> {
   // README claims the two-process rows are a floor, and that claim needs a
   // number rather than an assertion.
   console.log();
-  console.log(`  ${"callers on one credential".padEnd(40)}${"exchanges".padStart(10)}   what happened`);
+  console.log(`  ${"callers on one credential".padEnd(40)}${"token swaps".padStart(12)}   what happened`);
   console.log("  " + "-".repeat(84));
 
   for (const procs of [2, 4, 8]) {
@@ -175,7 +175,7 @@ async function main(): Promise<number> {
     const note = brokeN > 0
       ? `INTEGRATION BROKEN, ${brokeN} of ${n} runs`
       : `${failed.toFixed(1)} failed requests per run`;
-    console.log(`  ${r.name.padEnd(40)}${avg.padStart(10)}   ${note}`);
+    console.log(`  ${r.name.padEnd(40)}${avg.padStart(12)}   ${note}`);
   }
 
   provider.kill();
@@ -187,7 +187,9 @@ async function main(): Promise<number> {
     console.log("  working. It did not, so every other row is a harness fault.");
     return 1;
   }
-  console.log(`  ${REPEATS} runs per row. Correct is one exchange and nothing else.`);
+  console.log(`  ${REPEATS} runs per row. One expired credential needs exactly one`);
+  console.log("  token swap: the provider issues a new refresh token and revokes the old.");
+  console.log("  More than 1.0 means the credential was rotated more than once.");
   console.log();
   console.log("  INTEGRATION BROKEN     the stored credential no longer works, so the end");
   console.log("                         user has to reconnect the app");
