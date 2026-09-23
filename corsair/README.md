@@ -188,10 +188,12 @@ called rather than by the provider rejecting the losers.
 
 Agents are the reason a deployment would have more than two callers.
 
-What would change the analysis, and is not measured, is an agent doing something
-a replica never does: requesting a *different* operation on the same credential
-at the same moment. That is a divergence question rather than a duplication one,
-and this harness does not answer it.
+What would change the analysis, and is not measured here, is an agent doing
+something a replica never does: proposing a *different* answer for the same work
+at the same moment. Corsair's refresh path cannot produce that, because every
+caller wants the identical thing, a fresh token, so there is nothing to disagree
+about. That failure is measured separately in
+[`../multi-agent/`](../multi-agent/).
 
 ## Run it
 

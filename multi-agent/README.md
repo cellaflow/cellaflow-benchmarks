@@ -1,9 +1,14 @@
-# Two agents disagree. Deduplication does not notice.
+# Multiple agents: what happens when two of them disagree
 
-**This one measures a primitive, not a company.** The other benchmarks here audit
+**This one measures a primitive, not a company.** The other folders here audit
 real products at a pinned commit. This one constructs the scenario deliberately,
 because none of the four codebases audited so far produces it, and that absence
 is itself worth recording.
+
+It covers **one** multi-agent failure: two agents reaching different conclusions
+about the same work. Other multi-agent failures, several agents duplicating one
+action and contention scaling with the number of callers, are measured against
+real code in [`../corsair/`](../corsair/).
 
 Two agents look at ticket `TICKET-x`. Agent A concludes the refund is **40**.
 Agent B concludes it is **35**. Neither is retrying the other and neither has
