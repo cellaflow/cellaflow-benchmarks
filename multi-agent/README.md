@@ -26,16 +26,21 @@ channel to coordinate on.
 
 Five runs per row. **Correct is one refund**, of either 40 or 35.
 
-The third row's total is whichever agent won, and it changes between runs.
+In the `ticket only` row, the amount paid is whichever agent won, and it changes
+between runs.
 
-## The finding: the default idempotency key does not help here
+## The finding: hashing the arguments does not deduplicate this
 
-The middle row is the one worth sitting with, and the mechanism is the whole
-story.
+Read the `ticket + amount` row again. That is the guard you get without asking
+for one.
 
-An idempotency key derived from the tool's arguments is the standard answer,
-what most libraries give by default and what a team writes first. **It fails
-completely**, and it fails for a reason that is obvious once stated:
+Every idempotency library, this SDK included, derives a key by hashing what the
+function was called with. You write `issueRefund({ ticket, amount })` and the key
+is computed from both fields. Nobody chooses that; it is what happens when you
+do not choose.
+
+**Against two agents that disagree, it does nothing**, for a reason that is
+obvious the moment it is written down:
 
 ```
 agent A hashes  { ticket: "T-1", amount: 40 }  ->  key ...a3f1
@@ -52,8 +57,8 @@ the arguments. It was the ticket.
 
 ## What fixes the duplication, and what it does not fix
 
-The third row builds the key from the ticket alone, deliberately leaving the
-amount out of the hash:
+The `ticket only` row builds the key from the ticket alone, deliberately leaving
+the amount out of the hash:
 
 ```ts
 tool(issueRefund, {
@@ -84,27 +89,36 @@ claim to arbitrate. The only thing that spans sessions is the idempotency key,
 and a key that has converged carries no record that two different proposals
 reached it.
 
-So the honest summary of the third row is: **convergence is solved, reporting is
+So the summary of the `ticket only` row is: **convergence is solved, reporting is
 not.** A system that quietly picks one of two irreconcilable answers is better
 than one that acts on both, and it is not the same as a system that knows they
 disagreed.
 
-## Why this benchmark exists
+## Which failure to build for first
 
 Every other benchmark in this repository measures **duplication**: one agent
-doing the same thing twice across a crash or a retry. This is the only one
-measuring **divergence**: two agents doing different things once each.
+doing the same thing twice across a crash or a retry. This one measures
+**disagreement**: two agents doing different things once each.
 
-Worth stating plainly, because it cuts against the obvious reading: **divergence
-may be the rarer failure.** Anthropic's multi-agent research found agents are
-low-variance and converge rather than disagree, with 18 of 30 independently
-choosing an identical git branch name, and concluded that "when one agent makes
-a bad decision, it is likely that many agents will make that same bad decision."
-Correlated agents duplicate. They do not often contradict.
+Anthropic's multi-agent research settles the priority between them. They found
+agents are **low-variance and correlated**: 18 of 30 independently created a git
+branch with the identical name, and "when one agent makes a bad decision, it is
+likely that many agents will make that same bad decision."
 
-If that holds, the middle row above is the important one and the third row's
-silence matters less than it looks. If it does not hold, the third row is a
-product gap. This harness makes the question concrete; it does not settle it.
+**Correlated agents duplicate. They rarely contradict.** That points the same way
+twice over:
+
+- **Duplication is the common failure**, which is what the other three folders
+  measure, and it gets worse as agents are added rather than better. Correlation
+  clusters them into the same instant instead of spreading them out, which is the
+  contention curve measured in [`../corsair/`](../corsair/).
+- **Disagreement is the rarer one**, and the `ticket + amount` row shows the
+  default guard has no answer for it at all. Rare and unguarded is a different
+  risk profile from common and guarded, and worth knowing before choosing what to
+  build.
+
+This harness makes both measurable. It does not claim to know how often real
+agents reach different conclusions, which is the one number nobody has.
 
 ## Run it
 
