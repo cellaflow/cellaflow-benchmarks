@@ -1,4 +1,4 @@
-# A crash makes one answer 60% more expensive. CellaFlow brings that to 7%.
+# Every interrupted answer costs 60% more. CellaFlow brings that to 7%.
 
 [Inconvo](https://github.com/inconvo/inconvo) is a conversational analytics
 agent: a question comes in, a tree of sub-agents queries the database and reasons
@@ -24,9 +24,14 @@ Inconvo + CellaFlow
 
 Five runs per row.
 
-**One answer costs fifteen model calls. A crash partway through makes it cost
-twenty-four, which is 60% more for the same answer. With leased tools and durable
-results it costs sixteen, or 7% more.**
+**One answer costs fifteen model calls. A crash partway through makes that answer
+cost twenty-four, which is 60% more for the same result. With leased tools and
+durable results it costs sixteen, or 7% more.**
+
+The 60% applies to each answer a crash interrupts, not to the whole bill. An
+uninterrupted answer is unaffected, so the cost to a deployment is the crash rate
+times the overhead: at a 4% interruption rate, roughly 2.4% of total model spend
+buys nothing.
 
 Nine model calls thrown away becomes one. Every retry under CellaFlow is handed
 the work the first attempt already paid for, and pays only for what was never
@@ -34,8 +39,7 @@ finished.
 
 The overhead is the headline number here because the answer itself is correct in
 both arms. Inconvo's retry works. What it does not do is remember that the work
-was already bought, so a crash rate of a few percent is a few percent of every
-answer bought twice.
+was already bought.
 
 ## Why the retry pays for everything again
 
