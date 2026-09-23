@@ -1,0 +1,12 @@
+{
+  "name": "multi-agent-benchmark",
+  "private": true,
+  "type": "module",
+  "description": "What happens when two agents propose different arguments for the same work",
+  "dependencies": {
+    "@cellaflow/sdk": "^0.7.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}

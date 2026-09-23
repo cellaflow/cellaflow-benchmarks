@@ -29,6 +29,13 @@ to whoever asks next.
 Five runs per row. "Integration broken" means the stored credential no longer
 works and the end user has to reconnect the app.
 
+The harness races two replicas because that is reproducible. The same contention
+arrives from two agents sharing one tenant's credential, which is Corsair's own
+stated use case, and [the audit explains why agents are the harder
+case](../#two-replicas-is-the-conservative-case-agents-are-the-likely-one). The
+lease is keyed on the credential rather than on the caller, so it does not care
+which of the two you have.
+
 ## The row that separates this from a lock
 
 **`crash after the exchange is recorded`: broken every run becomes correct every run.**
