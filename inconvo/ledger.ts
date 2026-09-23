@@ -19,7 +19,7 @@ const LEDGER = join(import.meta.dirname, "ledger.jsonl");
 export type Entry = {
   run: string;
   event: "model_call";
-  /** Which of the eleven call sites this was, fingerprinted from the request. */
+  /** Which call site this was, fingerprinted from the request. */
   site: string;
   /** Attempt 1 is the original answer; 2 is the retry after the crash. */
   attempt: number;

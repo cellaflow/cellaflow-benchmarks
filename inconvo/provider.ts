@@ -8,7 +8,7 @@
 // Every agent in the tree reaches OpenAI through getAIModel(), which builds a
 // ChatOpenAI with useResponsesApi: true. So this answers /v1/responses, and
 // /v1/chat/completions as a fallback, and pointing OPENAI_BASE_URL here
-// redirects all eleven call sites without editing Inconvo.
+// redirects every call site without editing Inconvo.
 import { createHash } from "node:crypto";
 import { appendFileSync } from "node:fs";
 import { createServer } from "node:http";
@@ -28,13 +28,27 @@ const DUMP_FILE = join(import.meta.dirname, "requests.jsonl");
 // answer from the retry without the agent tree being asked.
 let attempt = 1;
 
+// The crash point. When `parkAfter` is n, the nth model call of the attempt is
+// recorded and then never answered: the socket is held open and the driver
+// blocks inside its await forever.
+//
+// This exists because polling the ledger and racing a SIGKILL does not work
+// here. The fake provider answers in microseconds, so a whole fifteen-call
+// answer completes well inside one poll interval and the kill always lands
+// after the answer finished, not during it. Parking makes the crash point
+// exact: the harness knows the driver is suspended with n calls paid for and
+// nothing returned, which is the state a real crash mid-answer leaves behind.
+let parkAfter = 0;
+let servedThisAttempt = 0;
+const parked: any[] = [];
+
 // How many times each site has been called within the current attempt. The
 // canned script is positional: an agent asked twice gets a different answer the
 // second time, which is what makes a tool loop terminate instead of spinning.
 const calls = new Map<string, number>();
 
-/** Fingerprint a request by its system prompt: each of the eleven call sites
- *  carries a different one, so this names the site without Inconvo cooperating. */
+/** Fingerprint a request by its system prompt: each call site carries a
+ *  different one, so this names the site without Inconvo cooperating. */
 function siteOf(body: any): string {
   const parts: string[] = [];
   const input = body?.input ?? body?.messages ?? [];
@@ -71,8 +85,15 @@ const server = createServer(async (req, res) => {
     if (body.run !== undefined) run = String(body.run);
     attempt = Number(body.attempt ?? 1);
     calls.clear();
+    servedThisAttempt = 0;
+    // Release anything still held from a previous attempt so its socket does
+    // not leak, then take the new crash point.
+    for (const held of parked.splice(0)) {
+      try { held.destroy(); } catch { /* the driver is already dead */ }
+    }
+    parkAfter = Number(body.parkAfter ?? 0);
     res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify({ run, attempt }));
+    res.end(JSON.stringify({ run, attempt, parkAfter }));
     return;
   }
 
@@ -105,6 +126,16 @@ const server = createServer(async (req, res) => {
     completionTokens: 0,
     at: Date.now(),
   });
+
+  servedThisAttempt += 1;
+
+  // Recorded above, deliberately never answered. The call is paid for and the
+  // driver is stuck waiting on it, which is exactly the moment the harness
+  // wants to kill it.
+  if (parkAfter > 0 && servedThisAttempt >= parkAfter) {
+    parked.push(res);
+    return;
+  }
 
   const reply = respond(body, req.url ?? "", site);
   res.writeHead(200, { "content-type": "application/json" });

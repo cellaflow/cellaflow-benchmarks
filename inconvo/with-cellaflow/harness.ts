@@ -1,51 +1,40 @@
-// Runs every scenario against Inconvo's real agent graph and prints the table.
+// The same scenarios as the audit one level up, with a leasing proxy between
+// Inconvo and the model endpoint.
 //
-// Each attempt spawns `driver.ts` as its own OS process, so "a crash" means a
-// process that dies, not an exception the graph could have caught.
-//
-// Model calls are counted from `ledger.jsonl`, which the fake provider appends
-// and fsyncs before it answers. The agent tree is never asked how much work it
-// did, and the crash point is chosen by watching that ledger rather than by
-// anything the driver reports about itself.
+// The driver is not copied. `../driver.ts` is spawned exactly as the audit
+// spawns it, with BENCH_PROVIDER_URL pointing at the proxy instead of straight
+// at the fake provider, so the graph, the sub-agents and the fixture are the
+// same code running the same way.
 import { spawn } from "node:child_process";
 import { join } from "node:path";
-import { PROVIDER_URL } from "./config.ts";
-import { entriesFor, reset } from "./ledger.ts";
+import { entriesFor, reset } from "../ledger.ts";
 
 const HERE = import.meta.dirname;
-const TSX = join(HERE, "node_modules/.bin/tsx");
-const ARM = process.env.BENCH_ARM ?? "Inconvo";
+const UP = join(HERE, "..");
+const TSX = join(UP, "node_modules/.bin/tsx");
 const REPEATS = Number(process.env.BENCH_REPEATS ?? 5);
-const CONTROL = PROVIDER_URL.replace(/\/v1$/, "");
+
+const PROVIDER_PORT = 8317;
+const PROXY_PORT = 8319;
+const CONTROL = `http://127.0.0.1:${PROVIDER_PORT}`;
+const PROXY = `http://127.0.0.1:${PROXY_PORT}`;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-type Trial = {
-  /** Model calls on the first attempt, before any crash. */
-  first: number;
-  /** Model calls on the retry. Every one of these is work paid for twice. */
-  retry: number;
-  /** Distinct call sites that ran on both attempts. */
-  repeated: number;
-  answered: boolean;
-};
+type Trial = { first: number; retry: number; repeated: number; answered: boolean };
 type Row = { name: string; trials: Trial[] };
 
-async function waitForProvider(): Promise<void> {
-  for (let i = 0; i < 100; i++) {
+async function waitFor(url: string, what: string): Promise<void> {
+  for (let i = 0; i < 200; i++) {
     try {
-      if ((await fetch(`${CONTROL}/control/health`)).ok) return;
+      if ((await fetch(url)).ok) return;
     } catch {}
     await sleep(100);
   }
-  throw new Error("provider did not come up");
+  throw new Error(`${what} did not come up`);
 }
 
-async function setAttempt(
-  run: string,
-  attempt: number,
-  parkAfter = 0,
-): Promise<void> {
+async function setAttempt(run: string, attempt: number, parkAfter = 0): Promise<void> {
   await fetch(`${CONTROL}/control/attempt`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -53,14 +42,25 @@ async function setAttempt(
   });
 }
 
-/** Spawns one answer. If killAfter is set, the process is SIGKILLed as soon as
- *  the ledger shows that many model calls, which is a crash partway through an
- *  answer with real work already paid for and nothing durable beneath it. */
+async function setThread(thread: string): Promise<void> {
+  await fetch(`${PROXY}/control/thread`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ thread }),
+  });
+}
+
 function runDriver(run: string, thread: string, killAfter = 0): Promise<boolean> {
   return new Promise((resolve) => {
-    const child = spawn(TSX, [join(HERE, "driver.ts")], {
-      cwd: HERE,
-      env: { ...process.env, BENCH_RUN: run, BENCH_THREAD: thread },
+    const child = spawn(TSX, [join(UP, "driver.ts")], {
+      cwd: UP,
+      env: {
+        ...process.env,
+        BENCH_RUN: run,
+        BENCH_THREAD: thread,
+        // The only difference from the audit arm.
+        BENCH_PROVIDER_URL: `${PROXY}/v1`,
+      },
       stdio: ["ignore", "pipe", "pipe"],
     });
 
@@ -69,9 +69,6 @@ function runDriver(run: string, thread: string, killAfter = 0): Promise<boolean>
     child.stdout.on("data", (d) => (out += d));
     child.stderr.on("data", (d) => (err += d));
 
-    // The provider is holding the nth response open, so the driver is parked
-    // rather than racing us: by the time the ledger shows n calls it is stuck
-    // and will stay stuck. A poll here is a readiness check, not a race.
     let watcher: NodeJS.Timeout | undefined;
     if (killAfter > 0) {
       watcher = setInterval(() => {
@@ -79,12 +76,10 @@ function runDriver(run: string, thread: string, killAfter = 0): Promise<boolean>
       }, 25);
     }
 
-    const guard = setTimeout(() => child.kill("SIGKILL"), 120_000);
+    const guard = setTimeout(() => child.kill("SIGKILL"), 180_000);
     child.on("close", (code) => {
       clearTimeout(guard);
       if (watcher) clearInterval(watcher);
-      // A deliberate kill is the scenario, not a failure. Anything else
-      // non-zero is a harness or integration fault and should be visible.
       if (code !== 0 && code !== null && killAfter === 0) {
         console.error(`  driver exited ${code}: ${(err || out).slice(0, 300)}`);
       }
@@ -97,6 +92,7 @@ async function trial(killAfter: number): Promise<Trial> {
   const run = `run-${Math.random().toString(16).slice(2, 8)}`;
   const thread = `thread-${run}`;
 
+  await setThread(thread);
   await setAttempt(run, 1, killAfter);
   const firstOk = await runDriver(run, thread, killAfter);
   const first = entriesFor(run).filter((e) => e.attempt === 1);
@@ -105,18 +101,15 @@ async function trial(killAfter: number): Promise<Trial> {
     return { first: first.length, retry: 0, repeated: 0, answered: firstOk };
   }
 
-  // The retry. A new process, same conversation thread, so the outermost
-  // checkpointer is available to it exactly as it would be in production.
-  // The retry is never parked. It runs to completion, and what it costs is the
-  // measurement.
+  // Same conversation thread, so the proxy derives the same keys and the engine
+  // still holds what attempt 1 paid for.
+  await setThread(thread);
   await setAttempt(run, 2, 0);
   const retryOk = await runDriver(run, thread, 0);
   const retry = entriesFor(run).filter((e) => e.attempt === 2);
 
   const firstSites = new Set(first.map((e) => e.site));
-  const repeated = new Set(
-    retry.map((e) => e.site).filter((s) => firstSites.has(s)),
-  ).size;
+  const repeated = new Set(retry.map((e) => e.site).filter((s) => firstSites.has(s))).size;
 
   return { first: first.length, retry: retry.length, repeated, answered: retryOk };
 }
@@ -131,17 +124,29 @@ const avg = (xs: number[]) => (xs.reduce((a, b) => a + b, 0) / xs.length).toFixe
 
 async function main(): Promise<number> {
   reset();
-  const provider = spawn(TSX, [join(HERE, "provider.ts")], {
-    cwd: HERE,
+  const provider = spawn(TSX, [join(UP, "provider.ts")], {
+    cwd: UP,
     stdio: ["ignore", "ignore", "inherit"],
     env: process.env,
   });
-  await waitForProvider();
+  await waitFor(`${CONTROL}/control/health`, "provider");
+
+  const proxy = spawn(TSX, [join(HERE, "proxy.ts")], {
+    cwd: HERE,
+    stdio: ["ignore", "ignore", "inherit"],
+    env: { ...process.env, BENCH_PROXY_PORT: String(PROXY_PORT), BENCH_UPSTREAM: CONTROL },
+  });
+  await waitFor(`${PROXY}/control/health`, "leasing proxy");
+
+  const stop = () => {
+    provider.kill();
+    proxy.kill();
+  };
 
   console.log();
-  console.log(`  ${ARM} -- real inconvoAgent graph and real sub-agents, inconvo@fa63f29.`);
-  console.log("  One question. compile({ checkpointer }) appears once, on the outermost");
-  console.log("  graph; every sub-agent is compiled without one and invoked inside a node.");
+  console.log("  Inconvo + CellaFlow -- same graph, same sub-agents, inconvo@fa63f29.");
+  console.log("  Every model call is forwarded through a leasing proxy, so each one");
+  console.log("  commits its result and a retry is handed that result back.");
   console.log();
   console.log(
     `  ${"scenario".padEnd(32)}${"calls".padStart(7)}${"retry".padStart(7)}` +
@@ -151,14 +156,11 @@ async function main(): Promise<number> {
 
   const control = await scenario("control, one answer, no crash", 0);
   const calls = Number(avg(control.trials.map((t) => t.first)));
-
-  // Crash once the answer is far enough in that real work has been paid for.
   const killAfter = Math.max(2, Math.floor(calls / 2));
   const crashed = await scenario("crash mid-answer, then retry", killAfter);
 
-  const rows: Row[] = [control, crashed];
-
-  // The clean answer is the yardstick. Anything above it was paid for twice.
+  // Same yardstick as the audit arm: the clean answer. Anything above it was
+  // paid for twice.
   const baseline = Number(avg(control.trials.map((t) => t.first)));
 
   for (const r of [control, crashed]) {
@@ -188,11 +190,9 @@ async function main(): Promise<number> {
     );
   }
 
-  provider.kill();
+  stop();
   console.log();
 
-  // Same gate as the other benchmarks: if the control row is not clean, the
-  // harness is measuring itself and no other row means anything.
   const controlOk = control.trials.every((t) => t.answered && t.first > 0);
   if (!controlOk) {
     console.log("  Control must answer the question and make at least one model call.");
@@ -202,8 +202,8 @@ async function main(): Promise<number> {
 
   console.log(`  ${REPEATS} runs per row. Correct is answering once and paying once.`);
   console.log();
-  console.log("  calls    model calls on the first attempt, before the crash");
-  console.log("  retry    model calls on the retry");
+  console.log("  calls    model calls that reached the provider before the crash");
+  console.log("  retry    model calls that reached the provider on the retry");
   console.log("  total    what one answer cost end to end");
   console.log("  wasted   total minus the clean answer: work paid for and thrown away");
   console.log();

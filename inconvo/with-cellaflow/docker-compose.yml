@@ -1,0 +1,21 @@
+# The only service this arm needs. Inconvo drives a fake model endpoint in a
+# sibling process, so there is no OpenAI account and no model spend: the engine
+# is here purely to hold the leases and the committed results.
+services:
+  cellaflow:
+    image: ghcr.io/cellaflow/cellaflow:latest
+    environment:
+      CELLAFLOW_HOST: "::"
+      CELLAFLOW_DB_PATH: /data/cellaflow
+    ports: ["50051:50051", "9090:9090"]
+    healthcheck:
+      # No wget or curl in the image; bash can open a socket. Greps for 200
+      # because /health/ready answers 503 until boot recovery completes.
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/9090 && printf "GET /health/ready HTTP/1.0\r\n\r\n" >&3 && grep -q "200 OK" <&3'
+      interval: 2s
+      timeout: 3s
+      retries: 30
