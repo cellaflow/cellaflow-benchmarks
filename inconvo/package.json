@@ -1,0 +1,9 @@
+{
+  "name": "inconvo-subagent-rework-benchmark",
+  "private": true,
+  "type": "module",
+  "description": "How much agent work is re-run when a crash interrupts one answer?",
+  "devDependencies": {
+    "tsx": "^4.21.0"
+  }
+}
