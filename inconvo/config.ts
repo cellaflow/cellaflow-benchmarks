@@ -1,7 +1,7 @@
 // Where the Inconvo clone lives. The benchmark imports their real agent graph
 // from here; nothing about the graph or its sub-agents is reimplemented.
 //
-//   git clone https://github.com/inconvo/inconvo
+//   git clone https://github.com/inconvoai/inconvo
 //   cd inconvo && git checkout fa63f29
 //   corepack pnpm install --filter "@repo/agents..."
 //

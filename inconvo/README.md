@@ -1,9 +1,11 @@
 # Every interrupted answer costs 60% more. CellaFlow brings that to 7%.
 
-[Inconvo](https://github.com/inconvo/inconvo) is a conversational analytics
+[Inconvo](https://github.com/inconvoai/inconvo) is a conversational analytics
 agent: a question comes in, a tree of sub-agents queries the database and reasons
 over the result, and an answer comes back. This measures what one process death
 costs, against their real graph at `fa63f29`.
+
+Inconvo joined [Attio](https://attio.com) after this audit was taken. The code remains public at the pinned commit, so the measurement stands and still reproduces.
 
 Nothing about the agent tree is reimplemented. `inconvoAgent` is imported from the
 clone and invoked the way their platform invokes it. The benchmark supplies two
@@ -138,7 +140,7 @@ never asked how much work it did.
 ## Run it
 
 ```bash
-git clone https://github.com/inconvo/inconvo
+git clone https://github.com/inconvoai/inconvo
 cd inconvo && git checkout fa63f29
 corepack pnpm install --filter "@repo/agents..."
 ```
