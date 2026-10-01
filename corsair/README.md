@@ -1,4 +1,4 @@
-# Two replicas refreshing one OAuth token spend it twice, and a crash loses it
+# Two replicas spend the same rotating refresh token, and a crash loses it
 
 An audit of **real Corsair** at `4f268cdf`: real `createAccountKeyManager`, real
 `singleFlight`, real read-merge-write of the encrypted credential blob. Nothing
