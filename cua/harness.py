@@ -10,7 +10,9 @@ import json, os, pathlib, subprocess, sys, uuid
 
 HERE = pathlib.Path(__file__).parent
 LEDGER = HERE / "ledger.jsonl"
-PY = str(HERE / "venv" / "bin" / "python")
+# BENCH_VENV selects the interpreter so one checkout can be run against
+# several cua-agent versions without reinstalling over the last one.
+PY = str(HERE / os.environ.get("BENCH_VENV", "venv") / "bin" / "python")
 OPS = ("reserve", "charge", "confirm")
 
 
@@ -45,9 +47,15 @@ def main() -> int:
     if LEDGER.exists():
         LEDGER.unlink()
     arm = "Cua + operation leases" if (HERE / "checkout.py").read_text().find("idempotency_key") > 0 else "Cua"
+    # Ask the interpreter that actually runs the driver which version it has.
+    # A hardcoded version in this line is how a result outlives the release
+    # it was measured against.
+    ver = subprocess.run(
+        [PY, "-c", "import importlib.metadata as m;print(m.version('cua-agent'))"],
+        capture_output=True, text=True).stdout.strip() or "unknown"
 
     print()
-    print(f"  {arm} -- cua-agent 0.8.4, real agent loop, canned model, fake machine.")
+    print(f"  {arm} -- cua-agent {ver}, real agent loop, canned model, fake machine.")
     print("  Operations performed for one order id; 1 is correct everywhere.")
     print()
     print(f"  {'scenario':<44}{'reserve':>9}{'charge':>8}{'confirm':>9}")

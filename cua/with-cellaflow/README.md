@@ -1,7 +1,7 @@
 # The same Cua, with a lease on each irreversible operation
 
 Identical harness, identical canned agent, identical fake machine, identical
-`cua-agent` 0.8.4 as [the audit one level up](../). The only difference is that
+`cua-agent` 0.9.0 as [the audit one level up](../). The only difference is that
 `click` routes each operation through a CellaFlow `@tool` keyed on the business
 operation — `charge:ORD-x` — rather than on the run, the process or the agent
 turn.
