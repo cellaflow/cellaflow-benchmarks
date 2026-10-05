@@ -4,9 +4,14 @@ An audit of **real Cua** — real `ComputerAgent.run`, real agent loop, real
 computer dispatch. Two things are replaced, both through Cua's own documented
 extension points: the model, by a canned agent registered with
 `@register_agent`, and the machine, by a `CustomComputerHandler` built from a
-dict of functions. `cua-agent` 0.8.4.
+dict of functions. `cua-agent` 0.9.0.
 
 No VM, no Lume, no display server, no API key, no LLM spend.
+
+**Measured against `0.8.4` and `0.9.0` with identical results**, so the
+behaviour is not specific to one release and was not fixed between them. The
+version in the output is read from the interpreter that runs the driver rather
+than written in by hand, so a stale number cannot survive a re-run.
 
 ```
   scenario                                      reserve  charge  confirm
@@ -90,9 +95,18 @@ is unrecoverable. A per-operation record turns *cannot retry, must fail* into
 ```bash
 # cua-agent requires Python >=3.11,<3.14
 uv venv --python 3.13 venv
-uv pip install --python venv/bin/python cua-agent cellaflow
+uv pip install --python venv/bin/python cua-agent==0.9.0 cellaflow
 
 ./venv/bin/python harness.py
+```
+
+To check another release without disturbing the one above, build a second
+environment and point `BENCH_VENV` at it:
+
+```bash
+uv venv --python 3.13 venv084
+uv pip install --python venv084/bin/python cua-agent==0.8.4
+BENCH_VENV=venv084 ./venv084/bin/python harness.py
 ```
 
 Deterministic. The control row is load-bearing: one run, no crash, each
