@@ -144,7 +144,7 @@ async function main(): Promise<number> {
   };
 
   console.log();
-  console.log("  Inconvo + CellaFlow -- same graph, same sub-agents, inconvo@fa63f29.");
+  console.log("  Inconvo + Cellaflow -- same graph, same sub-agents, inconvo@fa63f29.");
   console.log("  Every model call is forwarded through a leasing proxy, so each one");
   console.log("  commits its result and a retry is handed that result back.");
   console.log();

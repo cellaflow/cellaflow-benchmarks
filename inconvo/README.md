@@ -1,4 +1,4 @@
-# Every interrupted answer costs 60% more. CellaFlow brings that to 7%.
+# Every interrupted answer costs 60% more. Cellaflow brings that to 7%.
 
 [Inconvo](https://github.com/inconvoai/inconvo) is a conversational analytics
 agent: a question comes in, a tree of sub-agents queries the database and reasons
@@ -19,7 +19,7 @@ Inconvo alone
   control, one answer, no crash    15.0    0.0   15.0     0.0
   crash mid-answer, then retry      9.0   15.0   24.0     9.0
 
-Inconvo + CellaFlow
+Inconvo + Cellaflow
   control, one answer, no crash    15.0    0.0   15.0     0.0
   crash mid-answer, then retry      7.0    9.0   16.0     1.0
 ```
@@ -35,7 +35,7 @@ uninterrupted answer is unaffected, so the cost to a deployment is the crash rat
 times the overhead: at a 4% interruption rate, roughly 2.4% of total model spend
 buys nothing.
 
-Nine model calls thrown away becomes one. Every retry under CellaFlow is handed
+Nine model calls thrown away becomes one. Every retry under Cellaflow is handed
 the work the first attempt already paid for, and pays only for what was never
 finished.
 
@@ -64,7 +64,7 @@ and the expensive work happens below that granularity. Recording the graph is a
 different job from recording what the graph spent, and a checkpointer only does
 the first.
 
-## What CellaFlow adds
+## What Cellaflow adds
 
 Nothing in Inconvo changes. The audit driver already points `OPENAI_BASE_URL` at a
 fake provider; this arm points it at a **leasing proxy** that forwards to the same
@@ -143,9 +143,11 @@ never asked how much work it did.
 git clone https://github.com/inconvoai/inconvo
 cd inconvo && git checkout fa63f29
 corepack pnpm install --filter "@repo/agents..."
+cd ..
 ```
 
-Point `INCONVO_SRC` in `config.ts` at that clone. Their `package.json` requires
+Clone it into this directory and nothing needs configuring; `INCONVO_SRC`
+overrides that if it lives somewhere else. Their `package.json` requires
 node >= 22 and pins pnpm 11.1.2.
 
 ```bash
@@ -155,7 +157,7 @@ npx tsx harness.ts                      # Inconvo alone
 cd with-cellaflow
 docker compose up -d --wait             # the engine, the only service
 npm install
-npx tsx harness.ts                      # Inconvo + CellaFlow
+npx tsx harness.ts                      # Inconvo + Cellaflow
 ```
 
 No OpenAI account and no model spend: every call goes to the local fake provider.

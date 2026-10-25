@@ -2,7 +2,7 @@
 """The same fake machine, with each irreversible operation leased.
 
 Identical to ../checkout.py except that `click` routes the operation through a
-CellaFlow `@tool` keyed on the business operation -- `charge:ORD-x` -- rather
+Cellaflow `@tool` keyed on the business operation -- `charge:ORD-x` -- rather
 than on the run, the process or the agent turn. The key is what a retry derives
 again, so the second run recognises work the first one completed.
 """

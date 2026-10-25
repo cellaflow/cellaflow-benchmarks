@@ -5,6 +5,10 @@ services:
   cellaflow:
     image: ghcr.io/cellaflow/cellaflow:latest
     environment:
+      # The engine refuses to start without either an auth token or this
+      # explicit opt-out, so a benchmark that omits it never serves at all.
+      # Fine for a local benchmark on loopback; do not carry it anywhere else.
+      CELLAFLOW_ALLOW_UNAUTHENTICATED: "true"
       CELLAFLOW_HOST: "::"
       CELLAFLOW_DB_PATH: /data/cellaflow
     ports: ["50051:50051", "9090:9090"]

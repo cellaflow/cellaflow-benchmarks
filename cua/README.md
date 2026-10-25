@@ -95,10 +95,15 @@ is unrecoverable. A per-operation record turns *cannot retry, must fail* into
 ```bash
 # cua-agent requires Python >=3.11,<3.14
 uv venv --python 3.13 venv
-uv pip install --python venv/bin/python cua-agent==0.9.0 cellaflow
+uv pip install --python venv/bin/python -r requirements.txt
 
 ./venv/bin/python harness.py
 ```
+
+`requirements.txt` is where the pin lives, so both arms install the same
+`cua-agent`. This arm installs nothing else: it is Cua's code and the harness.
+Any Python 3.11 to 3.13 works; `uv` is only here because it will fetch that
+interpreter when the system one is outside the range.
 
 To check another release without disturbing the one above, build a second
 environment and point `BENCH_VENV` at it:

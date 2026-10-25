@@ -1,5 +1,5 @@
 # Both services this comparison needs. Skyvern keeps its tasks and steps in
-# Postgres; CellaFlow holds the leases. Neither knows about the other -- which
+# Postgres; Cellaflow holds the leases. Neither knows about the other -- which
 # is the point, and is why the integration is eighty lines rather than a fork.
 services:
   postgres:
@@ -20,6 +20,10 @@ services:
   cellaflow:
     image: ghcr.io/cellaflow/cellaflow:latest
     environment:
+      # The engine refuses to start without either an auth token or this
+      # explicit opt-out, so a benchmark that omits it never serves at all.
+      # Fine for a local benchmark on loopback; do not carry it anywhere else.
+      CELLAFLOW_ALLOW_UNAUTHENTICATED: "true"
       CELLAFLOW_HOST: "::"
       CELLAFLOW_DB_PATH: /data/cellaflow
     ports: ["50051:50051", "9090:9090"]

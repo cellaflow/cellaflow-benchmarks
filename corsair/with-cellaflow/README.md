@@ -4,7 +4,7 @@ Identical harness, identical fake provider, identical real
 `createAccountKeyManager` and `singleFlight` as [the audit one level
 up](../). Corsair's in-process dedupe is left exactly where it was.
 
-One thing is added: the token exchange is wrapped in a CellaFlow leased tool,
+One thing is added: the token exchange is wrapped in a Cellaflow leased tool,
 keyed on the credential rather than on the process or the run.
 
 ```ts
@@ -18,7 +18,7 @@ That does three things together, and the third is the one a lock cannot copy: it
 admits one caller, it records what that caller produced, and it hands that record
 to whoever asks next.
 
-| what goes wrong | Corsair alone | with CellaFlow |
+| what goes wrong | Corsair alone | with Cellaflow |
 | :--- | :--- | :--- |
 | nothing, one process | correct | correct |
 | two replicas, strict provider | **a user request fails, every run** | correct |
@@ -79,7 +79,7 @@ The first thing a competent engineer reaches for on reading Corsair's comment is
 of this benchmark, then removed as code and kept here, because the result is more
 useful than the directory was.
 
-| what goes wrong | Corsair alone | + `pg_advisory_lock` | with CellaFlow |
+| what goes wrong | Corsair alone | + `pg_advisory_lock` | with Cellaflow |
 | :--- | :--- | :--- | :--- |
 | nothing, one process | correct | correct | correct |
 | two replicas, strict provider | **request fails** | correct | correct |
@@ -99,10 +99,10 @@ is gone and the next process walks into the same wall a fraction sooner.
 
 ### Four things the pass/fail table hides
 
-Those rows score correctness, so the lock and CellaFlow both read as "clean" on
+Those rows score correctness, so the lock and Cellaflow both read as "clean" on
 the concurrency rows. They are not equivalent.
 
-| | `pg_advisory_lock` | CellaFlow |
+| | `pg_advisory_lock` | Cellaflow |
 | :--- | :--- | :--- |
 | holds a pool connection across the provider call | **yes**. Measured at 15.1s at pool 2, 6.2s at 5, 3.3s at 20 | no. Flat 3.0s |
 | holder hangs without dying | **never releases.** Session-scoped, no TTL parameter exists, so it frees on connection *death* and not on a process wedged on a slow call | reclaimed at the lifetime ceiling |
@@ -126,7 +126,7 @@ compared.
 ## What it costs
 
 **A hand-rolled table could also store the result.** Nothing here requires
-CellaFlow specifically. A `refresh_results` table with the idempotency key as
+Cellaflow specifically. A `refresh_results` table with the idempotency key as
 primary key, written in the same transaction, would close the same row. What
 that buys you is the job of writing lease expiry, fencing and result storage
 yourself, and getting all three right. The honest claim is about **what is

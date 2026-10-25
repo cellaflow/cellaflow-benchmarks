@@ -4,10 +4,16 @@
 //   git clone https://github.com/inconvoai/inconvo
 //   cd inconvo && git checkout fa63f29
 //   corepack pnpm install --filter "@repo/agents..."
+//   cd ..
 //
 // Their package.json requires node >= 22 and pins pnpm 11.1.2.
+//
+// Clone it into this directory and nothing needs configuring. INCONVO_SRC
+// overrides that if the clone lives somewhere else.
+import { join } from "node:path";
+
 export const INCONVO_SRC =
-  "/Users/blade/theblueskies/startup-source-codes/inconvo";
+  process.env.INCONVO_SRC ?? join(import.meta.dirname, "inconvo");
 
 export const AGENTS_SRC = `${INCONVO_SRC}/packages/agents/src`;
 
