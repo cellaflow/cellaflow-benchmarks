@@ -69,12 +69,31 @@ Each directory has its own instructions and dependencies. None of them need an
 API key, a model account or a cloud provider, and none of them spend money on
 inference: every model call goes to a local fake.
 
+Docker is the only thing every directory wants, for the services an arm stands
+up. Beyond that each has its own floor, because the subject sets it rather than
+we do:
+
+| benchmark | needs |
+| :--- | :--- |
+| [`cua/`](cua/) | Python 3.11 to 3.13; `cua-agent` does not support 3.14 |
+| [`corsair/`](corsair/) | Node 18+, and a clone of Corsair |
+| [`skyvern/`](skyvern/) | Python, a clone of Skyvern for its migrations, and Playwright's Chromium |
+| [`inconvo/`](inconvo/) | Node 22+ and pnpm, and a clone of Inconvo |
+| [`multi-agent/`](multi-agent/) | Node 18+ and nothing else |
+
+Each subject is cloned into the benchmark's own directory, where the harness
+looks for it by default. The `*_SRC` environment variable named in each README
+overrides that if yours lives somewhere else.
+
 Benchmarks that include a `with-cellaflow/` arm need the engine, which that
-arm's `docker compose up -d --wait` starts.
+arm's `docker compose up -d --wait` starts. Those compose files set
+`CELLAFLOW_ALLOW_UNAUTHENTICATED`, because the engine refuses to start with
+neither a token nor that explicit opt-out. It is right for a benchmark bound to
+loopback and wrong for anything reachable, so do not carry it elsewhere.
 
 ## Disclosure
 
-CellaFlow builds the leasing runtime used in the `with-cellaflow/` arms, so this
+Cellaflow builds the leasing runtime used in the `with-cellaflow/` arms, so this
 repository is not a neutral party. The first arm of every benchmark is the
 project's own code at a pinned commit, the harnesses are here, and the ledgers
 are the raw output, so the most useful report we can receive is a number that
