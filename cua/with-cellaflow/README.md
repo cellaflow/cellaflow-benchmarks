@@ -2,7 +2,7 @@
 
 Identical harness, identical canned agent, identical fake machine, identical
 `cua-agent` 0.9.0 as [the audit one level up](../). The only difference is that
-`click` routes each operation through a CellaFlow `@tool` keyed on the business
+`click` routes each operation through a Cellaflow `@tool` keyed on the business
 operation — `charge:ORD-x` — rather than on the run, the process or the agent
 turn.
 
@@ -81,7 +81,7 @@ memory is used.
 docker compose up -d --wait          # the engine, to hold the leases
 
 uv venv --python 3.13 venv           # cua-agent requires >=3.11,<3.14
-uv pip install --python venv/bin/python cua-agent cellaflow
+uv pip install --python venv/bin/python -r requirements.txt
 
 BENCH_HAS_LEASES=1 ./venv/bin/python harness.py
 ```
