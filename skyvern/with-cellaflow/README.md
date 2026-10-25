@@ -5,7 +5,7 @@ Skyvern v1.0.53 at `d23ceb4` as [the audit one level up](../). The only differen
 [`integration.py`](integration.py) and two call sites — nothing inside Skyvern.
 
 ```
-  scenario                            Skyvern  + CellaFlow  correct
+  scenario                            Skyvern  + Cellaflow  correct
   ---------------------------------------------------------------------
   control, no crash                         1          1         1
   crash before the click, then retry        0          1         1   fixed
@@ -55,7 +55,7 @@ What the customer experiences in each case, running Skyvern on its own versus
 Skyvern with an execution lease over the task and a lease on each irreversible
 operation:
 
-| what goes wrong | Skyvern alone | Skyvern + CellaFlow |
+| what goes wrong | Skyvern alone | Skyvern + Cellaflow |
 | :--- | :--- | :--- |
 | crash part-way through a multi-step checkout | **charged, no confirmation ever sent, unrecoverable** | order completes |
 | crash before the agent acts | request silently dropped, nobody notified | retry completes it |
@@ -199,14 +199,17 @@ table.
 ## Run it
 
 ```bash
-docker compose up -d --wait          # Postgres for Skyvern, CellaFlow for the leases
+docker compose up -d --wait          # Postgres for Skyvern, Cellaflow for the leases
 
-git clone https://github.com/Skyvern-AI/skyvern && (cd skyvern && git checkout d23ceb4)
-DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@localhost:5440/skyvern \
-  alembic -c skyvern/alembic.ini upgrade head
-
-python -m venv venv && ./venv/bin/pip install -r requirements.txt
+python3 -m venv venv && ./venv/bin/pip install -r requirements.txt
 ./venv/bin/playwright install chromium
+
+# The clone supplies the migrations only; the code under test is the pinned
+# commit requirements.txt installs. Alembic resolves `script_location` against
+# the working directory, so it runs from inside the clone rather than with -c.
+git clone https://github.com/Skyvern-AI/skyvern && (cd skyvern && git checkout d23ceb4)
+(cd skyvern && DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@localhost:5440/skyvern \
+  ../venv/bin/alembic upgrade head)
 
 ./venv/bin/python checkout_server.py 8899 &
 PYTHONPATH=. ./venv/bin/python harness.py

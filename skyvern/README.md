@@ -228,12 +228,15 @@ to the actions inside a run rather than the webhook after it.
 ```bash
 docker compose up -d --wait
 
-git clone https://github.com/Skyvern-AI/skyvern && (cd skyvern && git checkout d23ceb4)
-DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@localhost:5440/skyvern \
-  alembic -c skyvern/alembic.ini upgrade head
-
-python -m venv venv && ./venv/bin/pip install -r requirements.txt
+python3 -m venv venv && ./venv/bin/pip install -r requirements.txt
 ./venv/bin/playwright install chromium
+
+# The clone supplies the migrations only; the code under test is the pinned
+# commit requirements.txt installs. Alembic resolves `script_location` against
+# the working directory, so it runs from inside the clone rather than with -c.
+git clone https://github.com/Skyvern-AI/skyvern && (cd skyvern && git checkout d23ceb4)
+(cd skyvern && DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@localhost:5440/skyvern \
+  ../venv/bin/alembic upgrade head)
 
 ./venv/bin/python checkout_server.py 8899 &
 ./venv/bin/python harness.py
