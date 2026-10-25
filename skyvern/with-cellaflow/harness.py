@@ -14,10 +14,24 @@ import pathlib
 import re
 import subprocess
 import sys
+import time
 import uuid
+
+from integration import LEASE_TTL_MS
 
 HERE = pathlib.Path(__file__).parent
 LEDGER = HERE / "ledger.jsonl"
+
+# A retry cannot prove the previous holder is gone until that holder's lease
+# has aged out, so it has to outlive the TTL before asking. Skyvern's own
+# startup usually takes longer than 15s, which is what hid this: on a loaded
+# machine it does not, the retry is refused, and the row reports whatever the
+# first process managed before dying. Measured four ways, the retry was turned
+# away in three of four samples of `crash after the click`.
+#
+# A supervisor retrying a dead worker waits. The harness has to wait too, or
+# what it measures is its own startup time against the TTL.
+RETRY_AFTER_S = LEASE_TTL_MS / 1000 + 2
 PY = str(HERE / "venv" / "bin" / "python") if (HERE / "venv").exists() else sys.executable
 CHECKOUT_BASE = os.environ.get("BENCH_CHECKOUT_URL", "http://127.0.0.1:8899/")
 
@@ -61,6 +75,15 @@ def blocked(output: str) -> bool:
     return "another_step_is_running_for_task" in output
 
 
+def refused(output: str) -> bool:
+    """The lease turned this worker away, which is not the same as running.
+
+    Without this the outcome column reported a refused retry as "retried", so a
+    row that never executed read like a row that executed and chose not to act.
+    """
+    return "refused, task held by a live worker" in output
+
+
 # ---------------------------------------------------------------------------
 
 def sc_control() -> tuple[int, str]:
@@ -73,8 +96,11 @@ def sc_crash_then_retry(die: str) -> tuple[int, str]:
     oid = f"ORD-{uuid.uuid4().hex[:6]}"
     first = run(oid, die=die)
     org, task = ids_from(first.stdout)
+    time.sleep(RETRY_AFTER_S)
     second = run(oid, org=org, task=task)
-    return orders(oid), "task stranded" if blocked(second.stdout) else "retried"
+    if blocked(second.stdout):
+        return orders(oid), "task stranded"
+    return orders(oid), "lease refused the retry" if refused(second.stdout) else "retried"
 
 
 def sc_batch_fail() -> tuple[int, str]:
@@ -124,9 +150,13 @@ def sc_multi_op() -> tuple[dict, str]:
     oid = f"ORD-{uuid.uuid4().hex[:6]}"
     first = run(oid, die="between_ops", plan="multi_op")
     org, task = ids_from(first.stdout)
+    time.sleep(RETRY_AFTER_S)
     second = run(oid, org=org, task=task, plan="multi_op")
     got = ops(oid)
-    note = "retry blocked" if blocked(second.stdout) else "retry ran"
+    if blocked(second.stdout):
+        note = "retry blocked"
+    else:
+        note = "lease refused the retry" if refused(second.stdout) else "retry ran"
     return got, note
 
 

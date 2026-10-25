@@ -90,6 +90,17 @@ retry under a new step id derives the same key and takes a hit.
 `clear_stale_running_steps` in `integration.py` is the only code this adds beyond
 calling those two. It is short because the lease already answered the hard part.
 
+**The harness waits out the lease before retrying the same task**, which is why
+a run takes about a minute longer than the audit next door. A retry cannot prove
+the previous holder is gone until that holder's lease has aged out, so asking
+sooner gets a refusal rather than an answer. Without the wait, what the row
+measures is Skyvern's startup time against the 15s TTL: on an unloaded machine
+the retry arrives late and the row reads as published, and on a loaded one it
+arrives early, is refused, and does nothing. Sampled four times before the wait
+was added, the retry was turned away three times and the table reported whatever
+the first process managed before dying. With it, five consecutive runs produce
+the table above unchanged.
+
 ## What changed, and what did not
 
 **Crash before the click — the stranding is gone.** Skyvern places no order and
