@@ -1,3 +1,5 @@
 node_modules/
 ledger.jsonl
 requests.jsonl
+# The subject clone the README asks for.
+inconvo/

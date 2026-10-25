@@ -2,3 +2,5 @@ node_modules/
 ledger.jsonl
 *.sqlite
 *.sqlite-journal
+# The subject clone the README asks for.
+corsair/

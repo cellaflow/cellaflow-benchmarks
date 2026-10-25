@@ -8,3 +8,5 @@ log/
 temp/
 video/
 artifacts/
+# The subject clone the README asks for.
+skyvern/
