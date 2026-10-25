@@ -145,7 +145,7 @@ def main() -> int:
         LEDGER.unlink()
 
     print()
-    print("  Skyvern v1.0.53 (d23ceb4) WITH the CellaFlow integration.")
+    print("  Skyvern v1.0.53 (d23ceb4) WITH the Cellaflow integration.")
     print("  Same harness, same scenarios, same canned planner as the audit next door.")
     print()
     print(f"  {'scenario':<36}{'orders':>8}{'correct':>9}   outcome")

@@ -110,7 +110,7 @@ converged, correctly and silently, on an answer it had no basis for preferring.
 
 ## What nothing here does
 
-**No arm reports the disagreement.** Including CellaFlow.
+**No arm reports the disagreement.** Including Cellaflow.
 
 That is not an oversight in the harness, it is the current state of the product.
 Sequence claims, the mechanism that does refuse a divergent caller, are keyed on

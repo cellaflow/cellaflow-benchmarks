@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One Skyvern run against a local checkout page, WITH the CellaFlow integration.
+"""One Skyvern run against a local checkout page, WITH the Cellaflow integration.
 
 Identical to the audit's driver except for two blocks, both marked CELLAFLOW
 below: an execution lease around the run, and the checkout click routed through

@@ -15,7 +15,7 @@ import { openStore, seed } from "./keystore.js";
 
 const HERE = import.meta.dirname;
 const TSX = join(HERE, "node_modules/.bin/tsx");
-const ARM = process.env.BENCH_ARM ?? "Corsair + CellaFlow";
+const ARM = process.env.BENCH_ARM ?? "Corsair + Cellaflow";
 
 type Trial = { calls: number; rejected: number; alive: boolean; torn: boolean };
 type Row = { name: string; trials: Trial[] };

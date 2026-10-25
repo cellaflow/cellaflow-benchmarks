@@ -1,5 +1,5 @@
 // The same driver as the audit one level up, with the refresh wrapped in a
-// CellaFlow leased tool.
+// Cellaflow leased tool.
 //
 // Corsair's in-process singleFlight is left exactly where it was. This arm adds
 // cross-process coordination on top of it; it does not replace it.

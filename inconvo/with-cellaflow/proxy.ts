@@ -1,4 +1,4 @@
-// The CellaFlow arm, as a leasing proxy in front of the model endpoint.
+// The Cellaflow arm, as a leasing proxy in front of the model endpoint.
 //
 // Nothing about Inconvo's graph or its sub-agents is edited or reimplemented.
 // The audit driver already points OPENAI_BASE_URL at a fake provider, so this
