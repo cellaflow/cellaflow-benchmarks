@@ -95,9 +95,19 @@ class RunResult:
         return sum(1 for s in self.states.values() if s.count(1) == 1 and s.count(0) >= 1)
 
 
+class WorkerFailed(RuntimeError):
+    """A worker died for a reason no scenario asked for.
+
+    Raised rather than scored. An engine that is not up, an ERP returning 500
+    or a traceback out of the driver all leave the same mark as a real finding
+    (fewer orders in the ERP) and would be reported as one. The control row
+    catches some of that, and only when the control row is part of the run.
+    """
+
+
 def spawn(arm: str, run_tag: str, jobs_db: pathlib.Path, session: str, *,
           crash_at: str = "", crash_on: str = "", fault: str = "", fault_on: str = "",
-          start_at: float = 0.0, wait: bool = True):
+          start_at: float = 0.0, wait: bool = True, expect=(0,)):
     env = {
         **os.environ,
         "BENCH_ARM": arm,
@@ -117,7 +127,34 @@ def spawn(arm: str, run_tag: str, jobs_db: pathlib.Path, session: str, *,
     if not wait:
         return proc
     out, _ = proc.communicate()
+    check_exit(proc, expect, out)
     return out
+
+
+def check_exit(proc, expect, out: str) -> None:
+    if proc.returncode not in expect:
+        raise WorkerFailed(
+            f"worker exited {proc.returncode}, expected one of {expect}\n"
+            + out[-2000:]
+        )
+
+
+def write_results(out: pathlib.Path, results) -> None:
+    out.write_text(json.dumps(
+        {
+            key: {
+                arm: [
+                    {"duplicates": r.duplicates, "missing": r.missing,
+                     "refused": r.refused, "reused_after": r.reused_after,
+                     "duplicate_commitments": r.duplicate_commitments,
+                     "stray_drafts": r.stray_drafts,
+                     "orders_per_po": r.states}
+                    for r in runs
+                ]
+                for arm, runs in by_arm.items()
+            }
+            for key, by_arm in results.items()
+        }, indent=2) + "\n")
 
 
 def one_run(erp: Erp, scenario: Scenario, arm: str) -> RunResult:
@@ -152,9 +189,11 @@ def one_run(erp: Erp, scenario: Scenario, arm: str) -> RunResult:
         for p in procs:
             out, _ = p.communicate()
             transcript += out
+            check_exit(p, (0,), out)
     elif scenario.crash_at:
         transcript += spawn(arm, run_tag, JOBS / "w1.db", f"pass1-{run_tag}",
-                            crash_at=scenario.crash_at, crash_on=crash_po)
+                            crash_at=scenario.crash_at, crash_on=crash_po,
+                            expect=(137,))
         # A supervisor notices the worker is gone and starts it again. This is
         # the second pass, and it is where every finding in this benchmark
         # either happens or does not.
@@ -162,20 +201,31 @@ def one_run(erp: Erp, scenario: Scenario, arm: str) -> RunResult:
         retry = spawn(arm, run_tag, JOBS / "w1.db", f"pass2-{run_tag}")
         transcript += retry
     elif scenario.fault:
+        # The lost response is raised out of the driver, so this pass exits 1.
         transcript += spawn(arm, run_tag, JOBS / "w1.db", f"pass1-{run_tag}",
-                            fault=scenario.fault, fault_on=crash_po)
+                            fault=scenario.fault, fault_on=crash_po,
+                            expect=(1,))
         transcript += "--- retry ---\n"
         transcript += spawn(arm, run_tag, JOBS / "w1.db", f"pass2-{run_tag}")
     else:
         transcript += spawn(arm, run_tag, JOBS / "w1.db", f"pass1-{run_tag}")
 
     states = {o.po_no: [so["docstatus"] for so in erp.orders_for(o.po_no)] for o in orders}
-    after_marker = transcript.split("--- retry ---")[-1]
+    # Only the text after the marker, and only when there is one. `split` on
+    # an absent marker returns the whole transcript, which in `two-workers`
+    # (where there is no second attempt at all) counted a reuse printed by
+    # either worker, under a heading about second attempts.
+    after_marker = (transcript.split("--- retry ---", 1)[1]
+                    if "--- retry ---" in transcript else "")
     return RunResult(
         duplicates=sum(1 for s in states.values() if len(s) > 1),
         missing=sum(1 for s in states.values() if not s),
         refused=transcript.count("refused: duplicate purchase order"),
-        reused_after=f"{crash_po}: reused" in after_marker,
+        reused_after=(
+            # One worker reusing another's order, on any of the ten.
+            transcript.count(": reused") > 0 if scenario.two_workers
+            else f"{crash_po}: reused" in after_marker
+        ),
         states=states,
         transcript=transcript,
     )
@@ -196,6 +246,12 @@ def main() -> int:
     print("  Counted by asking ERPNext how many Sales Orders carry each PO number.")
     print()
 
+    # A narrowed run writes its own file. `results.json` is the full matrix,
+    # and a one-cell re-run quietly overwriting it with a single column is a
+    # good way to lose the thing the README quotes.
+    partial = bool(_WANTED) or len(ARMS) < 4 or RUNS != 5
+    out = HERE / ("results-partial.json" if partial else "results.json")
+
     for scenario in SCENARIOS:
         results[scenario.key] = {}
         for arm in ARMS:
@@ -207,6 +263,10 @@ def main() -> int:
                 print(f"  ...{scenario.key:<14} {arm:<10} run {i + 1}/{RUNS}",
                       end="\r", file=sys.stderr, flush=True)
             results[scenario.key][arm] = runs
+            # After every cell, not once at the end. The full matrix takes
+            # hours, and a failure in the last scenario used to discard every
+            # completed cell with nothing on disk.
+            write_results(out, results)
 
     print(" " * 70, end="\r", file=sys.stderr)
 
@@ -263,7 +323,7 @@ def main() -> int:
 
     print()
     print("  What the second attempt was handed back")
-    print("  " + "-" * 74)
+    print("  " + "-" * 80)
     for scenario in SCENARIOS:
         if scenario.key == "control":
             continue
@@ -277,28 +337,8 @@ def main() -> int:
             if refused:
                 note.append(f"refused by the ERP {refused}x")
             if note:
-                print(f"  {scenario.key:<16}{ARM_LABELS[arm]:<24}{', '.join(note)}")
+                print(f"  {scenario.key:<16}{ARM_LABELS[arm]:<27}{', '.join(note)}")
 
-    # A narrowed run writes its own file. `results.json` is the full matrix,
-    # and a one-cell re-run quietly overwriting it with a single column is a
-    # good way to lose the thing the README quotes.
-    partial = bool(_WANTED) or len(ARMS) < 4 or RUNS != 5
-    out = HERE / ("results-partial.json" if partial else "results.json")
-    out.write_text(json.dumps(
-        {
-            s.key: {
-                a: [
-                    {"duplicates": r.duplicates, "missing": r.missing,
-                     "refused": r.refused, "reused_after": r.reused_after,
-                     "duplicate_commitments": r.duplicate_commitments,
-                     "stray_drafts": r.stray_drafts,
-                     "orders_per_po": r.states}
-                    for r in results[s.key][a]
-                ]
-                for a in ARMS
-            }
-            for s in SCENARIOS
-        }, indent=2) + "\n")
     print(f"\n  Raw per-run counts in {out.name}.\n")
     return 0
 

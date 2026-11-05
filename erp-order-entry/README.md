@@ -7,13 +7,17 @@ process doing it dies, or when two processes do it at once, or when the ERP
 answers and the answer is lost on the way back.
 
 The ERP is real. **ERPNext v16.53.0**, the official `frappe_docker` stack at
-that pin, with MariaDB behind it. The orders are real `Sales Order` documents
+that pin, with MariaDB 11.8 behind it. The orders are real `Sales Order` documents
 created and submitted through `/api/resource` with an API key, the same way an
 integration would. The count at the end of every run is a query against
 ERPNext. Nothing self-reports.
 
 No API key for anything else, no model calls, no inference spend. The
 extraction step, which a deployment would give to a model, is a parser.
+
+Everything is pinned, arm C included: engine image
+`ghcr.io/cellaflow/cellaflow@sha256:a6fb0484c49e...`,
+SDK `cellaflow==0.8.0`. The exact digest is in `docker-compose.yml`.
 
 **We build one of the four arms.** Cellaflow is ours, so this is not a neutral
 comparison and should not be read as one. What is here instead is the raw

@@ -95,6 +95,31 @@ class Admin:
         print(f"[seed] created {doctype} {name}")
 
 
+def _usable_credentials(base: str):
+    """The key already on file, if the site still accepts it.
+
+    Tested rather than assumed: a key that survived a `docker compose down -v`
+    names a site whose database is gone, and reusing it would fail every call
+    later and further from the cause.
+    """
+    if not CREDENTIALS.exists():
+        return None
+    try:
+        d = json.loads(CREDENTIALS.read_text())
+        key, secret = d["api_key"], d["api_secret"]
+    except (ValueError, KeyError):
+        return None
+    try:
+        r = requests.get(
+            f"{base.rstrip('/')}/api/resource/User/Administrator",
+            headers={"Authorization": f"token {key}:{secret}"},
+            timeout=30,
+        )
+    except requests.RequestException:
+        return None
+    return (key, secret) if r.status_code == 200 else None
+
+
 def main() -> int:
     admin = Admin(BASE)
     admin.login()
@@ -171,11 +196,22 @@ def main() -> int:
     # secret, and the old one lingers in the Redis user cache long enough that
     # the next few requests fail to decrypt it -- an authentication error that
     # looks like a bug in the agent and is not.
-    secret = admin.call(
-        "POST", "/api/method/frappe.core.doctype.user.user.generate_keys",
-        json={"user": "Administrator"},
-    )["message"]["api_secret"]
-    key = admin.call("GET", "/api/resource/User/Administrator")["data"]["api_key"]
+    # The guard the comment above describes, which was missing. Re-running
+    # setup.sh is the obvious reaction to a half-finished stack, and without
+    # this it rotated the secret every time: the next run then failed to
+    # authenticate on every call, the control gate fired, and the transcript
+    # blamed the agent.
+    existing = _usable_credentials(BASE)
+    if existing:
+        key, secret = existing
+        print("[seed] reusing the API key already on file")
+    else:
+        secret = admin.call(
+            "POST", "/api/method/frappe.core.doctype.user.user.generate_keys",
+            json={"user": "Administrator"},
+        )["message"]["api_secret"]
+        key = admin.call("GET", "/api/resource/User/Administrator")["data"]["api_key"]
+        print("[seed] issued a new API key")
 
     CREDENTIALS.write_text(json.dumps(
         {"base_url": BASE, "api_key": key, "api_secret": secret}, indent=2) + "\n")

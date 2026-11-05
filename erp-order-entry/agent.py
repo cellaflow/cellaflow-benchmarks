@@ -143,9 +143,15 @@ def run_job(order: Order, erp: Erp, jobs: JobStore, arm: str) -> str:
         raise
     after = len(erp.orders_for(order.po_no))
 
-    # Whether the arm performed the write or was handed a prior result. Counted
-    # from the ERP rather than from a flag the arm sets, so an arm cannot claim
-    # a hit for a call that just ran again.
+    # Whether the arm performed the write or was handed a prior result.
+    # Counted from the ERP rather than from a flag the arm sets, so an arm
+    # cannot claim a hit for a call that just ran again.
+    #
+    # It errs in one direction only, and it is worth knowing which. When a
+    # second worker is racing, the peer can create the order between `before`
+    # and `after`, so a genuine cache hit here is recorded as "created". The
+    # count can understate reuse and can never overstate it, which is the
+    # right way round for a claim this benchmark makes about its own arm.
     reused = after == before
 
     _die("after-write", order.po_no)

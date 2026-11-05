@@ -67,7 +67,10 @@ class Credentials:
             )
         d = json.loads(CREDENTIALS.read_text())
         return cls(
-            base_url=os.environ.get("ERP_URL", d["base_url"]),
+            # `or`, not a default. An empty ERP_URL means "not set" rather
+            # than "use the empty string", and the file is what `setup.sh`
+            # wrote after seeding, so it already names the right port.
+            base_url=os.environ.get("ERP_URL") or d["base_url"],
             api_key=d["api_key"],
             api_secret=d["api_secret"],
         )
@@ -190,8 +193,18 @@ class Erp:
                     self._request(
                         "PUT", f"/api/resource/Sales Order/{name}", json={"docstatus": 2}
                     )
-                except ErpError:
-                    pass
+                except ErpError as exc:
+                    # Skip the delete rather than attempt it anyway. Frappe
+                    # refuses to delete a submitted document, so swallowing
+                    # the cancel here used to turn into an uncaught error one
+                    # line later, which reached the top of the harness and
+                    # ended the matrix.
+                    #
+                    # Leaving the order is safe: every run tags its purchase
+                    # order numbers, so nothing a previous run left behind can
+                    # be counted by the next one. It costs disk, not accuracy.
+                    print(f"[erp] could not cancel {name}, leaving it: {exc}")
+                    continue
             self._request("DELETE", f"/api/resource/Sales Order/{name}")
             removed += 1
         return removed

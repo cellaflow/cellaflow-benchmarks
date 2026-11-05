@@ -202,7 +202,11 @@ services:
   # Arm C only. Holds one lease per purchase order number, and the committed
   # result of the write it guards.
   cellaflow:
-    image: ghcr.io/cellaflow/cellaflow:latest
+    # Pinned by digest, for the same reason the ERPNext images are pinned by
+    # tag. This is the arm we build, and it is the arm two rows of the results
+    # report as losing, so a reader reproducing later has to be able to tell
+    # whether a different number came from a different engine.
+    image: ghcr.io/cellaflow/cellaflow@sha256:a6fb0484c49e4bd7df2cd9490fa1ccc6ec563855e75de7baddd379c37c4fb94d
     networks: [frappe_network]
     environment:
       CELLAFLOW_HOST: "::"

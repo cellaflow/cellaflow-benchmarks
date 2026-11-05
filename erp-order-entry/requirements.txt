@@ -1,2 +1,2 @@
 requests>=2.31
-cellaflow>=0.7.0
+cellaflow==0.8.0
