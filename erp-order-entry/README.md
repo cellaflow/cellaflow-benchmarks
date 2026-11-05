@@ -15,12 +15,18 @@ ERPNext. Nothing self-reports.
 No API key for anything else, no model calls, no inference spend. The
 extraction step, which a deployment would give to a model, is a parser.
 
+**We build one of the four arms.** Cellaflow is ours, so this is not a neutral
+comparison and should not be read as one. What is here instead is the raw
+output in `results.json`, a harness small enough to read in a sitting, and a
+table that reports the two rows our own arm loses. The most useful thing you
+could send back is a number that does not reproduce.
+
 ## The result
 
 Runs in which one customer PO number ended up carrying more than one Sales
 Order. Five runs per cell, and every cell came out the same way in all five.
 
-| | A. baseline | B. query-first guard | B2. ERPNext as it ships | C. leased write |
+| | A. baseline | B. query-first guard | B2. ERPNext as it ships | C. Cellaflow leased write |
 | :--- | :---: | :---: | :---: | :---: |
 | control, no crash | 0/5 | 0/5 | 0/5 | 0/5 |
 | crash after the write, before any record of it | **5/5** | 0/5 | 0/5 | **5/5** |
@@ -75,8 +81,8 @@ ERP. Arm B2 is the only row that leaves ERPNext's refusal switched on, and it
 is here because an honest benchmark against a destination that already guards
 this write has to say so.
 
-**C. leased write.** The same write, wrapped in a lease keyed on the customer's
-purchase order number:
+**C. Cellaflow leased write.** The same write, wrapped in a Cellaflow lease
+keyed on the customer's purchase order number:
 
 ```python
 @tool(idempotency_key=f"sales-order:{order.po_no}")

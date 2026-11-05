@@ -42,7 +42,7 @@ ARM_LABELS = {
     "baseline": "A. baseline",
     "guard": "B. query-first guard",
     "builtin": "B2. ERPNext setting",
-    "cellaflow": "C. leased write",
+    "cellaflow": "C. Cellaflow leased write",
 }
 
 
@@ -227,39 +227,39 @@ def main() -> int:
 
     width = 52
     print(f"  {'duplicate orders, runs out of ' + str(RUNS):<{width}}" +
-          "".join(f"{ARM_LABELS[a]:>22}" for a in ARMS))
-    print("  " + "-" * (width + 22 * len(ARMS)))
+          "".join(f"{ARM_LABELS[a]:>27}" for a in ARMS))
+    print("  " + "-" * (width + 27 * len(ARMS)))
     for scenario in SCENARIOS:
         cells = []
         for arm in ARMS:
             runs = results[scenario.key][arm]
             d = sum(1 for r in runs if r.duplicates)
             cells.append(f"{d}/{len(runs)}")
-        print(f"  {scenario.label:<{width}}" + "".join(f"{c:>22}" for c in cells))
+        print(f"  {scenario.label:<{width}}" + "".join(f"{c:>27}" for c in cells))
 
     print()
     print(f"  {'orders never created, runs out of ' + str(RUNS):<{width}}" +
-          "".join(f"{ARM_LABELS[a]:>22}" for a in ARMS))
-    print("  " + "-" * (width + 22 * len(ARMS)))
+          "".join(f"{ARM_LABELS[a]:>27}" for a in ARMS))
+    print("  " + "-" * (width + 27 * len(ARMS)))
     for scenario in SCENARIOS:
         cells = []
         for arm in ARMS:
             runs = results[scenario.key][arm]
             m = sum(1 for r in runs if r.missing)
             cells.append(f"{m}/{len(runs)}")
-        print(f"  {scenario.label:<{width}}" + "".join(f"{c:>22}" for c in cells))
+        print(f"  {scenario.label:<{width}}" + "".join(f"{c:>27}" for c in cells))
 
     print()
     print(f"  {'of which two SUBMITTED orders, runs out of ' + str(RUNS):<{width}}" +
-          "".join(f"{ARM_LABELS[a]:>22}" for a in ARMS))
-    print("  " + "-" * (width + 22 * len(ARMS)))
+          "".join(f"{ARM_LABELS[a]:>27}" for a in ARMS))
+    print("  " + "-" * (width + 27 * len(ARMS)))
     for scenario in SCENARIOS:
         cells = []
         for arm in ARMS:
             runs = results[scenario.key][arm]
             d = sum(1 for r in runs if r.duplicate_commitments)
             cells.append(f"{d}/{len(runs)}")
-        print(f"  {scenario.label:<{width}}" + "".join(f"{c:>22}" for c in cells))
+        print(f"  {scenario.label:<{width}}" + "".join(f"{c:>27}" for c in cells))
 
     print()
     print("  What the second attempt was handed back")
@@ -279,7 +279,11 @@ def main() -> int:
             if note:
                 print(f"  {scenario.key:<16}{ARM_LABELS[arm]:<24}{', '.join(note)}")
 
-    out = HERE / "results.json"
+    # A narrowed run writes its own file. `results.json` is the full matrix,
+    # and a one-cell re-run quietly overwriting it with a single column is a
+    # good way to lose the thing the README quotes.
+    partial = bool(_WANTED) or len(ARMS) < 4 or RUNS != 5
+    out = HERE / ("results-partial.json" if partial else "results.json")
     out.write_text(json.dumps(
         {
             s.key: {
