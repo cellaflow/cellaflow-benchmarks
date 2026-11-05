@@ -1,0 +1,15 @@
+From: orders@sligo-engineering.example
+To: sales@our-company.example
+Subject: Purchase Order PO-9019
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+Morning,
+
+PO-9019 please:
+
+  - 7 x PMP-114
+  - 9 x SEAL-22
+  - 20 x BRG-6204
+
+Aoife Brennan
+Sligo Engineering

@@ -1,0 +1,6 @@
+.erp-credentials.json
+jobs/
+venv/
+__pycache__/
+*.pyc
+results-partial.json

@@ -1,0 +1,241 @@
+# ERPNext v16.53.0, plus the engine that holds the leases for arm C.
+#
+# The ERPNext half is the official frappe_docker `pwd.yml` at the same pin, with
+# three changes and no others: every image tag is pinned to an exact release
+# rather than a floating one, the published ports are overridable, and the
+# cellaflow service is added. Keeping it otherwise identical is the point --
+# this is the stack ERPNext itself tells you to run, not a stripped-down one
+# that might behave differently under concurrency.
+#
+# Ports are overridable because a machine already running another benchmark has
+# 8080 and 50051 taken. Defaults match the rest of this repository.
+services:
+  backend:
+    image: frappe/erpnext:v16.53.0
+    networks: [frappe_network]
+    deploy:
+      restart_policy: {condition: on-failure}
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      MYSQL_ROOT_PASSWORD: admin
+      MARIADB_ROOT_PASSWORD: admin
+    depends_on:
+      configurator: {condition: service_completed_successfully}
+
+  configurator:
+    image: frappe/erpnext:v16.53.0
+    networks: [frappe_network]
+    deploy:
+      restart_policy: {condition: none}
+    entrypoint: [bash, -c]
+    command:
+      - >
+        ls -1 apps > sites/apps.txt;
+        bench set-config -g db_host $$DB_HOST;
+        bench set-config -gp db_port $$DB_PORT;
+        bench set-config -g redis_cache "redis://$$REDIS_CACHE";
+        bench set-config -g redis_queue "redis://$$REDIS_QUEUE";
+        bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
+        bench set-config -gp socketio_port $$SOCKETIO_PORT;
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      REDIS_CACHE: redis-cache:6379
+      REDIS_QUEUE: redis-queue:6379
+      SOCKETIO_PORT: "9000"
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  create-site:
+    image: frappe/erpnext:v16.53.0
+    networks: [frappe_network]
+    deploy:
+      restart_policy: {condition: none}
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+    entrypoint: [bash, -c]
+    command:
+      - >
+        wait-for-it -t 120 db:3306;
+        wait-for-it -t 120 redis-cache:6379;
+        wait-for-it -t 120 redis-queue:6379;
+        export start=`date +%s`;
+        until [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".db_host // empty"` ]] && \
+          [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".redis_cache // empty"` ]] && \
+          [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".redis_queue // empty"` ]];
+        do
+          echo "Waiting for sites/common_site_config.json to be created";
+          sleep 5;
+          if (( `date +%s`-start > 120 )); then
+            echo "could not find sites/common_site_config.json with required keys";
+            exit 1
+          fi
+        done;
+        echo "sites/common_site_config.json found";
+        if [ -d "sites/frontend" ]; then
+          echo "Site frontend already exists, skipping creation";
+        else
+          bench new-site --mariadb-user-host-login-scope='%' --admin-password=admin --db-root-username=root --db-root-password=admin --install-app erpnext --set-default frontend;
+        fi;
+
+  db:
+    image: mariadb:11.8
+    networks: [frappe_network]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      restart_policy: {condition: on-failure}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --innodb-snapshot-isolation=OFF
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MARIADB_ROOT_PASSWORD: admin
+    volumes:
+      - db-data:/var/lib/mysql
+
+  frontend:
+    image: frappe/erpnext:v16.53.0
+    networks: [frappe_network]
+    depends_on: [websocket, backend]
+    deploy:
+      restart_policy: {condition: on-failure}
+    command: [nginx-entrypoint.sh]
+    environment:
+      BACKEND: backend:8000
+      FRAPPE_SITE_NAME_HEADER: frontend
+      SOCKETIO: websocket:9000
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+      PROXY_READ_TIMEOUT: 120
+      CLIENT_MAX_BODY_SIZE: 50m
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+    ports:
+      - "${ERP_PORT:-8080}:8080"
+
+  queue-long:
+    image: frappe/erpnext:v16.53.0
+    networks: [frappe_network]
+    deploy:
+      restart_policy: {condition: on-failure}
+    command: [bench, worker, --queue, "long,default,short"]
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+    environment:
+      FRAPPE_REDIS_CACHE: redis://redis-cache:6379
+      FRAPPE_REDIS_QUEUE: redis://redis-queue:6379
+    depends_on:
+      configurator: {condition: service_completed_successfully}
+
+  queue-short:
+    image: frappe/erpnext:v16.53.0
+    networks: [frappe_network]
+    deploy:
+      restart_policy: {condition: on-failure}
+    command: [bench, worker, --queue, "short,default"]
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+    environment:
+      FRAPPE_REDIS_CACHE: redis://redis-cache:6379
+      FRAPPE_REDIS_QUEUE: redis://redis-queue:6379
+    depends_on:
+      configurator: {condition: service_completed_successfully}
+
+  redis-queue:
+    image: redis:6.2-alpine
+    networks: [frappe_network]
+    deploy:
+      restart_policy: {condition: on-failure}
+    volumes:
+      - redis-queue-data:/data
+
+  redis-cache:
+    image: redis:6.2-alpine
+    networks: [frappe_network]
+    deploy:
+      restart_policy: {condition: on-failure}
+
+  scheduler:
+    image: frappe/erpnext:v16.53.0
+    networks: [frappe_network]
+    deploy:
+      restart_policy: {condition: on-failure}
+    command: [bench, schedule]
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+    depends_on:
+      configurator: {condition: service_completed_successfully}
+
+  websocket:
+    image: frappe/erpnext:v16.53.0
+    networks: [frappe_network]
+    deploy:
+      restart_policy: {condition: on-failure}
+    command: [node, /home/frappe/frappe-bench/apps/frappe/socketio.js]
+    environment:
+      FRAPPE_REDIS_CACHE: redis://redis-cache:6379
+      FRAPPE_REDIS_QUEUE: redis://redis-queue:6379
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+    depends_on:
+      configurator: {condition: service_completed_successfully}
+
+  # Arm C only. Holds one lease per purchase order number, and the committed
+  # result of the write it guards.
+  cellaflow:
+    # Pinned by digest, for the same reason the ERPNext images are pinned by
+    # tag. This is the arm we build, and it is the arm two rows of the results
+    # report as losing, so a reader reproducing later has to be able to tell
+    # whether a different number came from a different engine.
+    image: ghcr.io/cellaflow/cellaflow@sha256:a6fb0484c49e4bd7df2cd9490fa1ccc6ec563855e75de7baddd379c37c4fb94d
+    networks: [frappe_network]
+    environment:
+      CELLAFLOW_HOST: "::"
+      CELLAFLOW_DB_PATH: /data/cellaflow
+      # The engine refuses to start with neither a token nor this, so an open
+      # port is always something someone chose. On a benchmark on a laptop,
+      # choosing it is right.
+      CELLAFLOW_ALLOW_UNAUTHENTICATED: "true"
+    ports:
+      - "${CELLAFLOW_PORT:-50051}:50051"
+      - "${CELLAFLOW_HEALTH_PORT:-9090}:9090"
+    healthcheck:
+      # No wget or curl in the image; bash can open a socket. Greps for 200
+      # because /health/ready answers 503 until boot recovery completes.
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/9090 && printf "GET /health/ready HTTP/1.0\r\n\r\n" >&3 && grep -q "200 OK" <&3'
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  db-data:
+  redis-queue-data:
+  sites:
+  logs:
+
+networks:
+  frappe_network:
+    driver: bridge

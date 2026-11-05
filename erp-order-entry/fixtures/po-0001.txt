@@ -1,0 +1,18 @@
+From: orders@northwind-fabrication.example
+To: sales@our-company.example
+Subject: Purchase Order PO-48812
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+Hi,
+
+Please find our order below. PO number PO-48812.
+
+Item            Qty
+BRG-6204         40
+SEAL-22          12
+
+Delivery to the Leeds site as usual.
+
+Thanks,
+Ruth Oyelaran
+Northwind Fabrication

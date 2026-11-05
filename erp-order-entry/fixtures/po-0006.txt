@@ -1,0 +1,12 @@
+From: purchasing@halvorsen-marine.example
+To: sales@our-company.example
+Subject: Purchase Order PO-48901
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+PO-48901.
+
+PMP-114     1
+VLV-80      2
+BRG-6204    8
+
+Jens

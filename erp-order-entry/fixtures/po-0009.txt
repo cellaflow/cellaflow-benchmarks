@@ -1,0 +1,11 @@
+From: procurement@tamworth-plastics.example
+To: sales@our-company.example
+Subject: Purchase Order PO-5540
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+Order PO-5540 as discussed on the call.
+
+BRG-6204    60
+PMP-114      4
+
+Dev

@@ -1,0 +1,13 @@
+From: purchasing@halvorsen-marine.example
+To: sales@our-company.example
+Subject: Purchase Order PO-48813
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+Good morning,
+
+Raising PO-48813 against your quote from last week.
+
+We need 15 of BRG-6204 and 6 of PMP-114.
+
+Regards,
+Jens Halvorsen

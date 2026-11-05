@@ -1,0 +1,13 @@
+From: procurement@tamworth-plastics.example
+To: sales@our-company.example
+Subject: Purchase Order PO-5521
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+Please supply against our purchase order PO-5521:
+
+  - 25 x SEAL-22
+
+Confirmation by return would be appreciated.
+
+Dev Ramanathan
+Tamworth Plastics
