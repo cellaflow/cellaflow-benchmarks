@@ -41,7 +41,7 @@ as a pass.
 | [`skyvern/`](skyvern/) | [Skyvern](https://github.com/Skyvern-AI/skyvern) | v1.0.53, `d23ceb4` | Seven crash and contention scenarios. Two end correctly. |
 | [`inconvo/`](inconvo/) | [Inconvo](https://github.com/inconvoai/inconvo) | `fa63f29` | An interrupted answer costs 60% more in model calls. With leased tools, 7%. |
 | [`multi-agent/`](multi-agent/) | constructed | n/a | Two agents reach different conclusions about one refund. How the key is derived decides whether the customer is refunded once or twice. |
-| [`erp-order-entry/`](erp-order-entry/) | constructed, against real ERPNext | ERPNext v16.53.0 | An agent writing sales orders into an ERP, crashed four ways. ERPNext's own setting stops every duplicate and never tells the agent the work is done. No single guard closes the table. |
+| [`erp-order-entry/`](erp-order-entry/) | constructed, against real ERPNext | ERPNext v16.53.0 | An agent writing sales orders into an ERP, crashed four ways. ERPNext's own setting prevents a second submitted order in every row, leaves a stray draft under concurrency, and never tells the agent the work is done. No single guard closes the table. |
 
 Most directories carry a `with-cellaflow/` arm that runs the same harness with a
 lease on each irreversible operation and reports which rows move.
