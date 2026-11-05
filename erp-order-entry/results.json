@@ -809,826 +809,6 @@
       }
     ]
   },
-  "in-write": {
-    "baseline": [
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-ea8eb813": [
-            1
-          ],
-          "PO-48813-ea8eb813": [
-            1
-          ],
-          "PO-77014-ea8eb813": [
-            1
-          ],
-          "PO-48820-ea8eb813": [
-            1
-          ],
-          "PO-5521-ea8eb813": [
-            1
-          ],
-          "PO-48901-ea8eb813": [
-            1,
-            1
-          ],
-          "PO-77030-ea8eb813": [
-            1
-          ],
-          "PO-9004-ea8eb813": [
-            1
-          ],
-          "PO-5540-ea8eb813": [
-            1
-          ],
-          "PO-9019-ea8eb813": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-b229fb28": [
-            1
-          ],
-          "PO-48813-b229fb28": [
-            1
-          ],
-          "PO-77014-b229fb28": [
-            1
-          ],
-          "PO-48820-b229fb28": [
-            1
-          ],
-          "PO-5521-b229fb28": [
-            1
-          ],
-          "PO-48901-b229fb28": [
-            1,
-            1
-          ],
-          "PO-77030-b229fb28": [
-            1
-          ],
-          "PO-9004-b229fb28": [
-            1
-          ],
-          "PO-5540-b229fb28": [
-            1
-          ],
-          "PO-9019-b229fb28": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-a9bf99a8": [
-            1
-          ],
-          "PO-48813-a9bf99a8": [
-            1
-          ],
-          "PO-77014-a9bf99a8": [
-            1
-          ],
-          "PO-48820-a9bf99a8": [
-            1
-          ],
-          "PO-5521-a9bf99a8": [
-            1
-          ],
-          "PO-48901-a9bf99a8": [
-            1,
-            1
-          ],
-          "PO-77030-a9bf99a8": [
-            1
-          ],
-          "PO-9004-a9bf99a8": [
-            1
-          ],
-          "PO-5540-a9bf99a8": [
-            1
-          ],
-          "PO-9019-a9bf99a8": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-275c5650": [
-            1
-          ],
-          "PO-48813-275c5650": [
-            1
-          ],
-          "PO-77014-275c5650": [
-            1
-          ],
-          "PO-48820-275c5650": [
-            1
-          ],
-          "PO-5521-275c5650": [
-            1
-          ],
-          "PO-48901-275c5650": [
-            1,
-            1
-          ],
-          "PO-77030-275c5650": [
-            1
-          ],
-          "PO-9004-275c5650": [
-            1
-          ],
-          "PO-5540-275c5650": [
-            1
-          ],
-          "PO-9019-275c5650": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-bb16d549": [
-            1
-          ],
-          "PO-48813-bb16d549": [
-            1
-          ],
-          "PO-77014-bb16d549": [
-            1
-          ],
-          "PO-48820-bb16d549": [
-            1
-          ],
-          "PO-5521-bb16d549": [
-            1
-          ],
-          "PO-48901-bb16d549": [
-            1,
-            1
-          ],
-          "PO-77030-bb16d549": [
-            1
-          ],
-          "PO-9004-bb16d549": [
-            1
-          ],
-          "PO-5540-bb16d549": [
-            1
-          ],
-          "PO-9019-bb16d549": [
-            1
-          ]
-        }
-      }
-    ],
-    "guard": [
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": true,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-dbef8608": [
-            1
-          ],
-          "PO-48813-dbef8608": [
-            1
-          ],
-          "PO-77014-dbef8608": [
-            1
-          ],
-          "PO-48820-dbef8608": [
-            1
-          ],
-          "PO-5521-dbef8608": [
-            1
-          ],
-          "PO-48901-dbef8608": [
-            1
-          ],
-          "PO-77030-dbef8608": [
-            1
-          ],
-          "PO-9004-dbef8608": [
-            1
-          ],
-          "PO-5540-dbef8608": [
-            1
-          ],
-          "PO-9019-dbef8608": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": true,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-9c7f847f": [
-            1
-          ],
-          "PO-48813-9c7f847f": [
-            1
-          ],
-          "PO-77014-9c7f847f": [
-            1
-          ],
-          "PO-48820-9c7f847f": [
-            1
-          ],
-          "PO-5521-9c7f847f": [
-            1
-          ],
-          "PO-48901-9c7f847f": [
-            1
-          ],
-          "PO-77030-9c7f847f": [
-            1
-          ],
-          "PO-9004-9c7f847f": [
-            1
-          ],
-          "PO-5540-9c7f847f": [
-            1
-          ],
-          "PO-9019-9c7f847f": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": true,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-658e8487": [
-            1
-          ],
-          "PO-48813-658e8487": [
-            1
-          ],
-          "PO-77014-658e8487": [
-            1
-          ],
-          "PO-48820-658e8487": [
-            1
-          ],
-          "PO-5521-658e8487": [
-            1
-          ],
-          "PO-48901-658e8487": [
-            1
-          ],
-          "PO-77030-658e8487": [
-            1
-          ],
-          "PO-9004-658e8487": [
-            1
-          ],
-          "PO-5540-658e8487": [
-            1
-          ],
-          "PO-9019-658e8487": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": true,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-6cb4b70e": [
-            1
-          ],
-          "PO-48813-6cb4b70e": [
-            1
-          ],
-          "PO-77014-6cb4b70e": [
-            1
-          ],
-          "PO-48820-6cb4b70e": [
-            1
-          ],
-          "PO-5521-6cb4b70e": [
-            1
-          ],
-          "PO-48901-6cb4b70e": [
-            1
-          ],
-          "PO-77030-6cb4b70e": [
-            1
-          ],
-          "PO-9004-6cb4b70e": [
-            1
-          ],
-          "PO-5540-6cb4b70e": [
-            1
-          ],
-          "PO-9019-6cb4b70e": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": true,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-7f4b7d0b": [
-            1
-          ],
-          "PO-48813-7f4b7d0b": [
-            1
-          ],
-          "PO-77014-7f4b7d0b": [
-            1
-          ],
-          "PO-48820-7f4b7d0b": [
-            1
-          ],
-          "PO-5521-7f4b7d0b": [
-            1
-          ],
-          "PO-48901-7f4b7d0b": [
-            1
-          ],
-          "PO-77030-7f4b7d0b": [
-            1
-          ],
-          "PO-9004-7f4b7d0b": [
-            1
-          ],
-          "PO-5540-7f4b7d0b": [
-            1
-          ],
-          "PO-9019-7f4b7d0b": [
-            1
-          ]
-        }
-      }
-    ],
-    "builtin": [
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 1,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-97c7bf0f": [
-            1
-          ],
-          "PO-48813-97c7bf0f": [
-            1
-          ],
-          "PO-77014-97c7bf0f": [
-            1
-          ],
-          "PO-48820-97c7bf0f": [
-            1
-          ],
-          "PO-5521-97c7bf0f": [
-            1
-          ],
-          "PO-48901-97c7bf0f": [
-            1
-          ],
-          "PO-77030-97c7bf0f": [
-            1
-          ],
-          "PO-9004-97c7bf0f": [
-            1
-          ],
-          "PO-5540-97c7bf0f": [
-            1
-          ],
-          "PO-9019-97c7bf0f": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 1,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-242e91be": [
-            1
-          ],
-          "PO-48813-242e91be": [
-            1
-          ],
-          "PO-77014-242e91be": [
-            1
-          ],
-          "PO-48820-242e91be": [
-            1
-          ],
-          "PO-5521-242e91be": [
-            1
-          ],
-          "PO-48901-242e91be": [
-            1
-          ],
-          "PO-77030-242e91be": [
-            1
-          ],
-          "PO-9004-242e91be": [
-            1
-          ],
-          "PO-5540-242e91be": [
-            1
-          ],
-          "PO-9019-242e91be": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 1,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-5e6062ba": [
-            1
-          ],
-          "PO-48813-5e6062ba": [
-            1
-          ],
-          "PO-77014-5e6062ba": [
-            1
-          ],
-          "PO-48820-5e6062ba": [
-            1
-          ],
-          "PO-5521-5e6062ba": [
-            1
-          ],
-          "PO-48901-5e6062ba": [
-            1
-          ],
-          "PO-77030-5e6062ba": [
-            1
-          ],
-          "PO-9004-5e6062ba": [
-            1
-          ],
-          "PO-5540-5e6062ba": [
-            1
-          ],
-          "PO-9019-5e6062ba": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 1,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-49398802": [
-            1
-          ],
-          "PO-48813-49398802": [
-            1
-          ],
-          "PO-77014-49398802": [
-            1
-          ],
-          "PO-48820-49398802": [
-            1
-          ],
-          "PO-5521-49398802": [
-            1
-          ],
-          "PO-48901-49398802": [
-            1
-          ],
-          "PO-77030-49398802": [
-            1
-          ],
-          "PO-9004-49398802": [
-            1
-          ],
-          "PO-5540-49398802": [
-            1
-          ],
-          "PO-9019-49398802": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 1,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-1511c65f": [
-            1
-          ],
-          "PO-48813-1511c65f": [
-            1
-          ],
-          "PO-77014-1511c65f": [
-            1
-          ],
-          "PO-48820-1511c65f": [
-            1
-          ],
-          "PO-5521-1511c65f": [
-            1
-          ],
-          "PO-48901-1511c65f": [
-            1
-          ],
-          "PO-77030-1511c65f": [
-            1
-          ],
-          "PO-9004-1511c65f": [
-            1
-          ],
-          "PO-5540-1511c65f": [
-            1
-          ],
-          "PO-9019-1511c65f": [
-            1
-          ]
-        }
-      }
-    ],
-    "cellaflow": [
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-c349ed82": [
-            1
-          ],
-          "PO-48813-c349ed82": [
-            1
-          ],
-          "PO-77014-c349ed82": [
-            1
-          ],
-          "PO-48820-c349ed82": [
-            1
-          ],
-          "PO-5521-c349ed82": [
-            1
-          ],
-          "PO-48901-c349ed82": [
-            1,
-            1
-          ],
-          "PO-77030-c349ed82": [
-            1
-          ],
-          "PO-9004-c349ed82": [
-            1
-          ],
-          "PO-5540-c349ed82": [
-            1
-          ],
-          "PO-9019-c349ed82": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-8091b843": [
-            1
-          ],
-          "PO-48813-8091b843": [
-            1
-          ],
-          "PO-77014-8091b843": [
-            1
-          ],
-          "PO-48820-8091b843": [
-            1
-          ],
-          "PO-5521-8091b843": [
-            1
-          ],
-          "PO-48901-8091b843": [
-            1,
-            1
-          ],
-          "PO-77030-8091b843": [
-            1
-          ],
-          "PO-9004-8091b843": [
-            1
-          ],
-          "PO-5540-8091b843": [
-            1
-          ],
-          "PO-9019-8091b843": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-98953d5c": [
-            1
-          ],
-          "PO-48813-98953d5c": [
-            1
-          ],
-          "PO-77014-98953d5c": [
-            1
-          ],
-          "PO-48820-98953d5c": [
-            1
-          ],
-          "PO-5521-98953d5c": [
-            1
-          ],
-          "PO-48901-98953d5c": [
-            1,
-            1
-          ],
-          "PO-77030-98953d5c": [
-            1
-          ],
-          "PO-9004-98953d5c": [
-            1
-          ],
-          "PO-5540-98953d5c": [
-            1
-          ],
-          "PO-9019-98953d5c": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-c2afff18": [
-            1
-          ],
-          "PO-48813-c2afff18": [
-            1
-          ],
-          "PO-77014-c2afff18": [
-            1
-          ],
-          "PO-48820-c2afff18": [
-            1
-          ],
-          "PO-5521-c2afff18": [
-            1
-          ],
-          "PO-48901-c2afff18": [
-            1,
-            1
-          ],
-          "PO-77030-c2afff18": [
-            1
-          ],
-          "PO-9004-c2afff18": [
-            1
-          ],
-          "PO-5540-c2afff18": [
-            1
-          ],
-          "PO-9019-c2afff18": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 1,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 1,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-56c9c8e1": [
-            1
-          ],
-          "PO-48813-56c9c8e1": [
-            1
-          ],
-          "PO-77014-56c9c8e1": [
-            1
-          ],
-          "PO-48820-56c9c8e1": [
-            1
-          ],
-          "PO-5521-56c9c8e1": [
-            1
-          ],
-          "PO-48901-56c9c8e1": [
-            1,
-            1
-          ],
-          "PO-77030-56c9c8e1": [
-            1
-          ],
-          "PO-9004-56c9c8e1": [
-            1
-          ],
-          "PO-5540-56c9c8e1": [
-            1
-          ],
-          "PO-9019-56c9c8e1": [
-            1
-          ]
-        }
-      }
-    ]
-  },
   "after-write": {
     "baseline": [
       {
@@ -2438,816 +1618,6 @@
             1
           ],
           "PO-9019-810a176d": [
-            1
-          ]
-        }
-      }
-    ]
-  },
-  "before-write": {
-    "baseline": [
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-3e587db3": [
-            1
-          ],
-          "PO-48813-3e587db3": [
-            1
-          ],
-          "PO-77014-3e587db3": [
-            1
-          ],
-          "PO-48820-3e587db3": [
-            1
-          ],
-          "PO-5521-3e587db3": [
-            1
-          ],
-          "PO-48901-3e587db3": [
-            1
-          ],
-          "PO-77030-3e587db3": [
-            1
-          ],
-          "PO-9004-3e587db3": [
-            1
-          ],
-          "PO-5540-3e587db3": [
-            1
-          ],
-          "PO-9019-3e587db3": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-d1560352": [
-            1
-          ],
-          "PO-48813-d1560352": [
-            1
-          ],
-          "PO-77014-d1560352": [
-            1
-          ],
-          "PO-48820-d1560352": [
-            1
-          ],
-          "PO-5521-d1560352": [
-            1
-          ],
-          "PO-48901-d1560352": [
-            1
-          ],
-          "PO-77030-d1560352": [
-            1
-          ],
-          "PO-9004-d1560352": [
-            1
-          ],
-          "PO-5540-d1560352": [
-            1
-          ],
-          "PO-9019-d1560352": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-f1b4f144": [
-            1
-          ],
-          "PO-48813-f1b4f144": [
-            1
-          ],
-          "PO-77014-f1b4f144": [
-            1
-          ],
-          "PO-48820-f1b4f144": [
-            1
-          ],
-          "PO-5521-f1b4f144": [
-            1
-          ],
-          "PO-48901-f1b4f144": [
-            1
-          ],
-          "PO-77030-f1b4f144": [
-            1
-          ],
-          "PO-9004-f1b4f144": [
-            1
-          ],
-          "PO-5540-f1b4f144": [
-            1
-          ],
-          "PO-9019-f1b4f144": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-6b4fdda2": [
-            1
-          ],
-          "PO-48813-6b4fdda2": [
-            1
-          ],
-          "PO-77014-6b4fdda2": [
-            1
-          ],
-          "PO-48820-6b4fdda2": [
-            1
-          ],
-          "PO-5521-6b4fdda2": [
-            1
-          ],
-          "PO-48901-6b4fdda2": [
-            1
-          ],
-          "PO-77030-6b4fdda2": [
-            1
-          ],
-          "PO-9004-6b4fdda2": [
-            1
-          ],
-          "PO-5540-6b4fdda2": [
-            1
-          ],
-          "PO-9019-6b4fdda2": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-f3fb2a97": [
-            1
-          ],
-          "PO-48813-f3fb2a97": [
-            1
-          ],
-          "PO-77014-f3fb2a97": [
-            1
-          ],
-          "PO-48820-f3fb2a97": [
-            1
-          ],
-          "PO-5521-f3fb2a97": [
-            1
-          ],
-          "PO-48901-f3fb2a97": [
-            1
-          ],
-          "PO-77030-f3fb2a97": [
-            1
-          ],
-          "PO-9004-f3fb2a97": [
-            1
-          ],
-          "PO-5540-f3fb2a97": [
-            1
-          ],
-          "PO-9019-f3fb2a97": [
-            1
-          ]
-        }
-      }
-    ],
-    "guard": [
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-5b1c8bfa": [
-            1
-          ],
-          "PO-48813-5b1c8bfa": [
-            1
-          ],
-          "PO-77014-5b1c8bfa": [
-            1
-          ],
-          "PO-48820-5b1c8bfa": [
-            1
-          ],
-          "PO-5521-5b1c8bfa": [
-            1
-          ],
-          "PO-48901-5b1c8bfa": [
-            1
-          ],
-          "PO-77030-5b1c8bfa": [
-            1
-          ],
-          "PO-9004-5b1c8bfa": [
-            1
-          ],
-          "PO-5540-5b1c8bfa": [
-            1
-          ],
-          "PO-9019-5b1c8bfa": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-21053988": [
-            1
-          ],
-          "PO-48813-21053988": [
-            1
-          ],
-          "PO-77014-21053988": [
-            1
-          ],
-          "PO-48820-21053988": [
-            1
-          ],
-          "PO-5521-21053988": [
-            1
-          ],
-          "PO-48901-21053988": [
-            1
-          ],
-          "PO-77030-21053988": [
-            1
-          ],
-          "PO-9004-21053988": [
-            1
-          ],
-          "PO-5540-21053988": [
-            1
-          ],
-          "PO-9019-21053988": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-9c4db092": [
-            1
-          ],
-          "PO-48813-9c4db092": [
-            1
-          ],
-          "PO-77014-9c4db092": [
-            1
-          ],
-          "PO-48820-9c4db092": [
-            1
-          ],
-          "PO-5521-9c4db092": [
-            1
-          ],
-          "PO-48901-9c4db092": [
-            1
-          ],
-          "PO-77030-9c4db092": [
-            1
-          ],
-          "PO-9004-9c4db092": [
-            1
-          ],
-          "PO-5540-9c4db092": [
-            1
-          ],
-          "PO-9019-9c4db092": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-e8c58c40": [
-            1
-          ],
-          "PO-48813-e8c58c40": [
-            1
-          ],
-          "PO-77014-e8c58c40": [
-            1
-          ],
-          "PO-48820-e8c58c40": [
-            1
-          ],
-          "PO-5521-e8c58c40": [
-            1
-          ],
-          "PO-48901-e8c58c40": [
-            1
-          ],
-          "PO-77030-e8c58c40": [
-            1
-          ],
-          "PO-9004-e8c58c40": [
-            1
-          ],
-          "PO-5540-e8c58c40": [
-            1
-          ],
-          "PO-9019-e8c58c40": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-caf4b820": [
-            1
-          ],
-          "PO-48813-caf4b820": [
-            1
-          ],
-          "PO-77014-caf4b820": [
-            1
-          ],
-          "PO-48820-caf4b820": [
-            1
-          ],
-          "PO-5521-caf4b820": [
-            1
-          ],
-          "PO-48901-caf4b820": [
-            1
-          ],
-          "PO-77030-caf4b820": [
-            1
-          ],
-          "PO-9004-caf4b820": [
-            1
-          ],
-          "PO-5540-caf4b820": [
-            1
-          ],
-          "PO-9019-caf4b820": [
-            1
-          ]
-        }
-      }
-    ],
-    "builtin": [
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-ac653bcb": [
-            1
-          ],
-          "PO-48813-ac653bcb": [
-            1
-          ],
-          "PO-77014-ac653bcb": [
-            1
-          ],
-          "PO-48820-ac653bcb": [
-            1
-          ],
-          "PO-5521-ac653bcb": [
-            1
-          ],
-          "PO-48901-ac653bcb": [
-            1
-          ],
-          "PO-77030-ac653bcb": [
-            1
-          ],
-          "PO-9004-ac653bcb": [
-            1
-          ],
-          "PO-5540-ac653bcb": [
-            1
-          ],
-          "PO-9019-ac653bcb": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-285bbb50": [
-            1
-          ],
-          "PO-48813-285bbb50": [
-            1
-          ],
-          "PO-77014-285bbb50": [
-            1
-          ],
-          "PO-48820-285bbb50": [
-            1
-          ],
-          "PO-5521-285bbb50": [
-            1
-          ],
-          "PO-48901-285bbb50": [
-            1
-          ],
-          "PO-77030-285bbb50": [
-            1
-          ],
-          "PO-9004-285bbb50": [
-            1
-          ],
-          "PO-5540-285bbb50": [
-            1
-          ],
-          "PO-9019-285bbb50": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-912b8720": [
-            1
-          ],
-          "PO-48813-912b8720": [
-            1
-          ],
-          "PO-77014-912b8720": [
-            1
-          ],
-          "PO-48820-912b8720": [
-            1
-          ],
-          "PO-5521-912b8720": [
-            1
-          ],
-          "PO-48901-912b8720": [
-            1
-          ],
-          "PO-77030-912b8720": [
-            1
-          ],
-          "PO-9004-912b8720": [
-            1
-          ],
-          "PO-5540-912b8720": [
-            1
-          ],
-          "PO-9019-912b8720": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-c3e749b5": [
-            1
-          ],
-          "PO-48813-c3e749b5": [
-            1
-          ],
-          "PO-77014-c3e749b5": [
-            1
-          ],
-          "PO-48820-c3e749b5": [
-            1
-          ],
-          "PO-5521-c3e749b5": [
-            1
-          ],
-          "PO-48901-c3e749b5": [
-            1
-          ],
-          "PO-77030-c3e749b5": [
-            1
-          ],
-          "PO-9004-c3e749b5": [
-            1
-          ],
-          "PO-5540-c3e749b5": [
-            1
-          ],
-          "PO-9019-c3e749b5": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-e7f9b6fe": [
-            1
-          ],
-          "PO-48813-e7f9b6fe": [
-            1
-          ],
-          "PO-77014-e7f9b6fe": [
-            1
-          ],
-          "PO-48820-e7f9b6fe": [
-            1
-          ],
-          "PO-5521-e7f9b6fe": [
-            1
-          ],
-          "PO-48901-e7f9b6fe": [
-            1
-          ],
-          "PO-77030-e7f9b6fe": [
-            1
-          ],
-          "PO-9004-e7f9b6fe": [
-            1
-          ],
-          "PO-5540-e7f9b6fe": [
-            1
-          ],
-          "PO-9019-e7f9b6fe": [
-            1
-          ]
-        }
-      }
-    ],
-    "cellaflow": [
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-79113544": [
-            1
-          ],
-          "PO-48813-79113544": [
-            1
-          ],
-          "PO-77014-79113544": [
-            1
-          ],
-          "PO-48820-79113544": [
-            1
-          ],
-          "PO-5521-79113544": [
-            1
-          ],
-          "PO-48901-79113544": [
-            1
-          ],
-          "PO-77030-79113544": [
-            1
-          ],
-          "PO-9004-79113544": [
-            1
-          ],
-          "PO-5540-79113544": [
-            1
-          ],
-          "PO-9019-79113544": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-debeac2f": [
-            1
-          ],
-          "PO-48813-debeac2f": [
-            1
-          ],
-          "PO-77014-debeac2f": [
-            1
-          ],
-          "PO-48820-debeac2f": [
-            1
-          ],
-          "PO-5521-debeac2f": [
-            1
-          ],
-          "PO-48901-debeac2f": [
-            1
-          ],
-          "PO-77030-debeac2f": [
-            1
-          ],
-          "PO-9004-debeac2f": [
-            1
-          ],
-          "PO-5540-debeac2f": [
-            1
-          ],
-          "PO-9019-debeac2f": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-830bfdc7": [
-            1
-          ],
-          "PO-48813-830bfdc7": [
-            1
-          ],
-          "PO-77014-830bfdc7": [
-            1
-          ],
-          "PO-48820-830bfdc7": [
-            1
-          ],
-          "PO-5521-830bfdc7": [
-            1
-          ],
-          "PO-48901-830bfdc7": [
-            1
-          ],
-          "PO-77030-830bfdc7": [
-            1
-          ],
-          "PO-9004-830bfdc7": [
-            1
-          ],
-          "PO-5540-830bfdc7": [
-            1
-          ],
-          "PO-9019-830bfdc7": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-671d9724": [
-            1
-          ],
-          "PO-48813-671d9724": [
-            1
-          ],
-          "PO-77014-671d9724": [
-            1
-          ],
-          "PO-48820-671d9724": [
-            1
-          ],
-          "PO-5521-671d9724": [
-            1
-          ],
-          "PO-48901-671d9724": [
-            1
-          ],
-          "PO-77030-671d9724": [
-            1
-          ],
-          "PO-9004-671d9724": [
-            1
-          ],
-          "PO-5540-671d9724": [
-            1
-          ],
-          "PO-9019-671d9724": [
-            1
-          ]
-        }
-      },
-      {
-        "duplicates": 0,
-        "missing": 0,
-        "refused": 0,
-        "reused_after": false,
-        "duplicate_commitments": 0,
-        "stray_drafts": 0,
-        "orders_per_po": {
-          "PO-48812-d1ed6f8f": [
-            1
-          ],
-          "PO-48813-d1ed6f8f": [
-            1
-          ],
-          "PO-77014-d1ed6f8f": [
-            1
-          ],
-          "PO-48820-d1ed6f8f": [
-            1
-          ],
-          "PO-5521-d1ed6f8f": [
-            1
-          ],
-          "PO-48901-d1ed6f8f": [
-            1
-          ],
-          "PO-77030-d1ed6f8f": [
-            1
-          ],
-          "PO-9004-d1ed6f8f": [
-            1
-          ],
-          "PO-5540-d1ed6f8f": [
-            1
-          ],
-          "PO-9019-d1ed6f8f": [
             1
           ]
         }
@@ -4166,6 +2536,1636 @@
             1
           ],
           "PO-9019-f7a0168b": [
+            1
+          ]
+        }
+      }
+    ]
+  },
+  "in-write": {
+    "baseline": [
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-ea8eb813": [
+            1
+          ],
+          "PO-48813-ea8eb813": [
+            1
+          ],
+          "PO-77014-ea8eb813": [
+            1
+          ],
+          "PO-48820-ea8eb813": [
+            1
+          ],
+          "PO-5521-ea8eb813": [
+            1
+          ],
+          "PO-48901-ea8eb813": [
+            1,
+            1
+          ],
+          "PO-77030-ea8eb813": [
+            1
+          ],
+          "PO-9004-ea8eb813": [
+            1
+          ],
+          "PO-5540-ea8eb813": [
+            1
+          ],
+          "PO-9019-ea8eb813": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-b229fb28": [
+            1
+          ],
+          "PO-48813-b229fb28": [
+            1
+          ],
+          "PO-77014-b229fb28": [
+            1
+          ],
+          "PO-48820-b229fb28": [
+            1
+          ],
+          "PO-5521-b229fb28": [
+            1
+          ],
+          "PO-48901-b229fb28": [
+            1,
+            1
+          ],
+          "PO-77030-b229fb28": [
+            1
+          ],
+          "PO-9004-b229fb28": [
+            1
+          ],
+          "PO-5540-b229fb28": [
+            1
+          ],
+          "PO-9019-b229fb28": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-a9bf99a8": [
+            1
+          ],
+          "PO-48813-a9bf99a8": [
+            1
+          ],
+          "PO-77014-a9bf99a8": [
+            1
+          ],
+          "PO-48820-a9bf99a8": [
+            1
+          ],
+          "PO-5521-a9bf99a8": [
+            1
+          ],
+          "PO-48901-a9bf99a8": [
+            1,
+            1
+          ],
+          "PO-77030-a9bf99a8": [
+            1
+          ],
+          "PO-9004-a9bf99a8": [
+            1
+          ],
+          "PO-5540-a9bf99a8": [
+            1
+          ],
+          "PO-9019-a9bf99a8": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-275c5650": [
+            1
+          ],
+          "PO-48813-275c5650": [
+            1
+          ],
+          "PO-77014-275c5650": [
+            1
+          ],
+          "PO-48820-275c5650": [
+            1
+          ],
+          "PO-5521-275c5650": [
+            1
+          ],
+          "PO-48901-275c5650": [
+            1,
+            1
+          ],
+          "PO-77030-275c5650": [
+            1
+          ],
+          "PO-9004-275c5650": [
+            1
+          ],
+          "PO-5540-275c5650": [
+            1
+          ],
+          "PO-9019-275c5650": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-bb16d549": [
+            1
+          ],
+          "PO-48813-bb16d549": [
+            1
+          ],
+          "PO-77014-bb16d549": [
+            1
+          ],
+          "PO-48820-bb16d549": [
+            1
+          ],
+          "PO-5521-bb16d549": [
+            1
+          ],
+          "PO-48901-bb16d549": [
+            1,
+            1
+          ],
+          "PO-77030-bb16d549": [
+            1
+          ],
+          "PO-9004-bb16d549": [
+            1
+          ],
+          "PO-5540-bb16d549": [
+            1
+          ],
+          "PO-9019-bb16d549": [
+            1
+          ]
+        }
+      }
+    ],
+    "guard": [
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": true,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-dbef8608": [
+            1
+          ],
+          "PO-48813-dbef8608": [
+            1
+          ],
+          "PO-77014-dbef8608": [
+            1
+          ],
+          "PO-48820-dbef8608": [
+            1
+          ],
+          "PO-5521-dbef8608": [
+            1
+          ],
+          "PO-48901-dbef8608": [
+            1
+          ],
+          "PO-77030-dbef8608": [
+            1
+          ],
+          "PO-9004-dbef8608": [
+            1
+          ],
+          "PO-5540-dbef8608": [
+            1
+          ],
+          "PO-9019-dbef8608": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": true,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-9c7f847f": [
+            1
+          ],
+          "PO-48813-9c7f847f": [
+            1
+          ],
+          "PO-77014-9c7f847f": [
+            1
+          ],
+          "PO-48820-9c7f847f": [
+            1
+          ],
+          "PO-5521-9c7f847f": [
+            1
+          ],
+          "PO-48901-9c7f847f": [
+            1
+          ],
+          "PO-77030-9c7f847f": [
+            1
+          ],
+          "PO-9004-9c7f847f": [
+            1
+          ],
+          "PO-5540-9c7f847f": [
+            1
+          ],
+          "PO-9019-9c7f847f": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": true,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-658e8487": [
+            1
+          ],
+          "PO-48813-658e8487": [
+            1
+          ],
+          "PO-77014-658e8487": [
+            1
+          ],
+          "PO-48820-658e8487": [
+            1
+          ],
+          "PO-5521-658e8487": [
+            1
+          ],
+          "PO-48901-658e8487": [
+            1
+          ],
+          "PO-77030-658e8487": [
+            1
+          ],
+          "PO-9004-658e8487": [
+            1
+          ],
+          "PO-5540-658e8487": [
+            1
+          ],
+          "PO-9019-658e8487": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": true,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-6cb4b70e": [
+            1
+          ],
+          "PO-48813-6cb4b70e": [
+            1
+          ],
+          "PO-77014-6cb4b70e": [
+            1
+          ],
+          "PO-48820-6cb4b70e": [
+            1
+          ],
+          "PO-5521-6cb4b70e": [
+            1
+          ],
+          "PO-48901-6cb4b70e": [
+            1
+          ],
+          "PO-77030-6cb4b70e": [
+            1
+          ],
+          "PO-9004-6cb4b70e": [
+            1
+          ],
+          "PO-5540-6cb4b70e": [
+            1
+          ],
+          "PO-9019-6cb4b70e": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": true,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-7f4b7d0b": [
+            1
+          ],
+          "PO-48813-7f4b7d0b": [
+            1
+          ],
+          "PO-77014-7f4b7d0b": [
+            1
+          ],
+          "PO-48820-7f4b7d0b": [
+            1
+          ],
+          "PO-5521-7f4b7d0b": [
+            1
+          ],
+          "PO-48901-7f4b7d0b": [
+            1
+          ],
+          "PO-77030-7f4b7d0b": [
+            1
+          ],
+          "PO-9004-7f4b7d0b": [
+            1
+          ],
+          "PO-5540-7f4b7d0b": [
+            1
+          ],
+          "PO-9019-7f4b7d0b": [
+            1
+          ]
+        }
+      }
+    ],
+    "builtin": [
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 1,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-97c7bf0f": [
+            1
+          ],
+          "PO-48813-97c7bf0f": [
+            1
+          ],
+          "PO-77014-97c7bf0f": [
+            1
+          ],
+          "PO-48820-97c7bf0f": [
+            1
+          ],
+          "PO-5521-97c7bf0f": [
+            1
+          ],
+          "PO-48901-97c7bf0f": [
+            1
+          ],
+          "PO-77030-97c7bf0f": [
+            1
+          ],
+          "PO-9004-97c7bf0f": [
+            1
+          ],
+          "PO-5540-97c7bf0f": [
+            1
+          ],
+          "PO-9019-97c7bf0f": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 1,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-242e91be": [
+            1
+          ],
+          "PO-48813-242e91be": [
+            1
+          ],
+          "PO-77014-242e91be": [
+            1
+          ],
+          "PO-48820-242e91be": [
+            1
+          ],
+          "PO-5521-242e91be": [
+            1
+          ],
+          "PO-48901-242e91be": [
+            1
+          ],
+          "PO-77030-242e91be": [
+            1
+          ],
+          "PO-9004-242e91be": [
+            1
+          ],
+          "PO-5540-242e91be": [
+            1
+          ],
+          "PO-9019-242e91be": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 1,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-5e6062ba": [
+            1
+          ],
+          "PO-48813-5e6062ba": [
+            1
+          ],
+          "PO-77014-5e6062ba": [
+            1
+          ],
+          "PO-48820-5e6062ba": [
+            1
+          ],
+          "PO-5521-5e6062ba": [
+            1
+          ],
+          "PO-48901-5e6062ba": [
+            1
+          ],
+          "PO-77030-5e6062ba": [
+            1
+          ],
+          "PO-9004-5e6062ba": [
+            1
+          ],
+          "PO-5540-5e6062ba": [
+            1
+          ],
+          "PO-9019-5e6062ba": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 1,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-49398802": [
+            1
+          ],
+          "PO-48813-49398802": [
+            1
+          ],
+          "PO-77014-49398802": [
+            1
+          ],
+          "PO-48820-49398802": [
+            1
+          ],
+          "PO-5521-49398802": [
+            1
+          ],
+          "PO-48901-49398802": [
+            1
+          ],
+          "PO-77030-49398802": [
+            1
+          ],
+          "PO-9004-49398802": [
+            1
+          ],
+          "PO-5540-49398802": [
+            1
+          ],
+          "PO-9019-49398802": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 1,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-1511c65f": [
+            1
+          ],
+          "PO-48813-1511c65f": [
+            1
+          ],
+          "PO-77014-1511c65f": [
+            1
+          ],
+          "PO-48820-1511c65f": [
+            1
+          ],
+          "PO-5521-1511c65f": [
+            1
+          ],
+          "PO-48901-1511c65f": [
+            1
+          ],
+          "PO-77030-1511c65f": [
+            1
+          ],
+          "PO-9004-1511c65f": [
+            1
+          ],
+          "PO-5540-1511c65f": [
+            1
+          ],
+          "PO-9019-1511c65f": [
+            1
+          ]
+        }
+      }
+    ],
+    "cellaflow": [
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-c349ed82": [
+            1
+          ],
+          "PO-48813-c349ed82": [
+            1
+          ],
+          "PO-77014-c349ed82": [
+            1
+          ],
+          "PO-48820-c349ed82": [
+            1
+          ],
+          "PO-5521-c349ed82": [
+            1
+          ],
+          "PO-48901-c349ed82": [
+            1,
+            1
+          ],
+          "PO-77030-c349ed82": [
+            1
+          ],
+          "PO-9004-c349ed82": [
+            1
+          ],
+          "PO-5540-c349ed82": [
+            1
+          ],
+          "PO-9019-c349ed82": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-8091b843": [
+            1
+          ],
+          "PO-48813-8091b843": [
+            1
+          ],
+          "PO-77014-8091b843": [
+            1
+          ],
+          "PO-48820-8091b843": [
+            1
+          ],
+          "PO-5521-8091b843": [
+            1
+          ],
+          "PO-48901-8091b843": [
+            1,
+            1
+          ],
+          "PO-77030-8091b843": [
+            1
+          ],
+          "PO-9004-8091b843": [
+            1
+          ],
+          "PO-5540-8091b843": [
+            1
+          ],
+          "PO-9019-8091b843": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-98953d5c": [
+            1
+          ],
+          "PO-48813-98953d5c": [
+            1
+          ],
+          "PO-77014-98953d5c": [
+            1
+          ],
+          "PO-48820-98953d5c": [
+            1
+          ],
+          "PO-5521-98953d5c": [
+            1
+          ],
+          "PO-48901-98953d5c": [
+            1,
+            1
+          ],
+          "PO-77030-98953d5c": [
+            1
+          ],
+          "PO-9004-98953d5c": [
+            1
+          ],
+          "PO-5540-98953d5c": [
+            1
+          ],
+          "PO-9019-98953d5c": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-c2afff18": [
+            1
+          ],
+          "PO-48813-c2afff18": [
+            1
+          ],
+          "PO-77014-c2afff18": [
+            1
+          ],
+          "PO-48820-c2afff18": [
+            1
+          ],
+          "PO-5521-c2afff18": [
+            1
+          ],
+          "PO-48901-c2afff18": [
+            1,
+            1
+          ],
+          "PO-77030-c2afff18": [
+            1
+          ],
+          "PO-9004-c2afff18": [
+            1
+          ],
+          "PO-5540-c2afff18": [
+            1
+          ],
+          "PO-9019-c2afff18": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 1,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 1,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-56c9c8e1": [
+            1
+          ],
+          "PO-48813-56c9c8e1": [
+            1
+          ],
+          "PO-77014-56c9c8e1": [
+            1
+          ],
+          "PO-48820-56c9c8e1": [
+            1
+          ],
+          "PO-5521-56c9c8e1": [
+            1
+          ],
+          "PO-48901-56c9c8e1": [
+            1,
+            1
+          ],
+          "PO-77030-56c9c8e1": [
+            1
+          ],
+          "PO-9004-56c9c8e1": [
+            1
+          ],
+          "PO-5540-56c9c8e1": [
+            1
+          ],
+          "PO-9019-56c9c8e1": [
+            1
+          ]
+        }
+      }
+    ]
+  },
+  "before-write": {
+    "baseline": [
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-3e587db3": [
+            1
+          ],
+          "PO-48813-3e587db3": [
+            1
+          ],
+          "PO-77014-3e587db3": [
+            1
+          ],
+          "PO-48820-3e587db3": [
+            1
+          ],
+          "PO-5521-3e587db3": [
+            1
+          ],
+          "PO-48901-3e587db3": [
+            1
+          ],
+          "PO-77030-3e587db3": [
+            1
+          ],
+          "PO-9004-3e587db3": [
+            1
+          ],
+          "PO-5540-3e587db3": [
+            1
+          ],
+          "PO-9019-3e587db3": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-d1560352": [
+            1
+          ],
+          "PO-48813-d1560352": [
+            1
+          ],
+          "PO-77014-d1560352": [
+            1
+          ],
+          "PO-48820-d1560352": [
+            1
+          ],
+          "PO-5521-d1560352": [
+            1
+          ],
+          "PO-48901-d1560352": [
+            1
+          ],
+          "PO-77030-d1560352": [
+            1
+          ],
+          "PO-9004-d1560352": [
+            1
+          ],
+          "PO-5540-d1560352": [
+            1
+          ],
+          "PO-9019-d1560352": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-f1b4f144": [
+            1
+          ],
+          "PO-48813-f1b4f144": [
+            1
+          ],
+          "PO-77014-f1b4f144": [
+            1
+          ],
+          "PO-48820-f1b4f144": [
+            1
+          ],
+          "PO-5521-f1b4f144": [
+            1
+          ],
+          "PO-48901-f1b4f144": [
+            1
+          ],
+          "PO-77030-f1b4f144": [
+            1
+          ],
+          "PO-9004-f1b4f144": [
+            1
+          ],
+          "PO-5540-f1b4f144": [
+            1
+          ],
+          "PO-9019-f1b4f144": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-6b4fdda2": [
+            1
+          ],
+          "PO-48813-6b4fdda2": [
+            1
+          ],
+          "PO-77014-6b4fdda2": [
+            1
+          ],
+          "PO-48820-6b4fdda2": [
+            1
+          ],
+          "PO-5521-6b4fdda2": [
+            1
+          ],
+          "PO-48901-6b4fdda2": [
+            1
+          ],
+          "PO-77030-6b4fdda2": [
+            1
+          ],
+          "PO-9004-6b4fdda2": [
+            1
+          ],
+          "PO-5540-6b4fdda2": [
+            1
+          ],
+          "PO-9019-6b4fdda2": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-f3fb2a97": [
+            1
+          ],
+          "PO-48813-f3fb2a97": [
+            1
+          ],
+          "PO-77014-f3fb2a97": [
+            1
+          ],
+          "PO-48820-f3fb2a97": [
+            1
+          ],
+          "PO-5521-f3fb2a97": [
+            1
+          ],
+          "PO-48901-f3fb2a97": [
+            1
+          ],
+          "PO-77030-f3fb2a97": [
+            1
+          ],
+          "PO-9004-f3fb2a97": [
+            1
+          ],
+          "PO-5540-f3fb2a97": [
+            1
+          ],
+          "PO-9019-f3fb2a97": [
+            1
+          ]
+        }
+      }
+    ],
+    "guard": [
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-5b1c8bfa": [
+            1
+          ],
+          "PO-48813-5b1c8bfa": [
+            1
+          ],
+          "PO-77014-5b1c8bfa": [
+            1
+          ],
+          "PO-48820-5b1c8bfa": [
+            1
+          ],
+          "PO-5521-5b1c8bfa": [
+            1
+          ],
+          "PO-48901-5b1c8bfa": [
+            1
+          ],
+          "PO-77030-5b1c8bfa": [
+            1
+          ],
+          "PO-9004-5b1c8bfa": [
+            1
+          ],
+          "PO-5540-5b1c8bfa": [
+            1
+          ],
+          "PO-9019-5b1c8bfa": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-21053988": [
+            1
+          ],
+          "PO-48813-21053988": [
+            1
+          ],
+          "PO-77014-21053988": [
+            1
+          ],
+          "PO-48820-21053988": [
+            1
+          ],
+          "PO-5521-21053988": [
+            1
+          ],
+          "PO-48901-21053988": [
+            1
+          ],
+          "PO-77030-21053988": [
+            1
+          ],
+          "PO-9004-21053988": [
+            1
+          ],
+          "PO-5540-21053988": [
+            1
+          ],
+          "PO-9019-21053988": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-9c4db092": [
+            1
+          ],
+          "PO-48813-9c4db092": [
+            1
+          ],
+          "PO-77014-9c4db092": [
+            1
+          ],
+          "PO-48820-9c4db092": [
+            1
+          ],
+          "PO-5521-9c4db092": [
+            1
+          ],
+          "PO-48901-9c4db092": [
+            1
+          ],
+          "PO-77030-9c4db092": [
+            1
+          ],
+          "PO-9004-9c4db092": [
+            1
+          ],
+          "PO-5540-9c4db092": [
+            1
+          ],
+          "PO-9019-9c4db092": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-e8c58c40": [
+            1
+          ],
+          "PO-48813-e8c58c40": [
+            1
+          ],
+          "PO-77014-e8c58c40": [
+            1
+          ],
+          "PO-48820-e8c58c40": [
+            1
+          ],
+          "PO-5521-e8c58c40": [
+            1
+          ],
+          "PO-48901-e8c58c40": [
+            1
+          ],
+          "PO-77030-e8c58c40": [
+            1
+          ],
+          "PO-9004-e8c58c40": [
+            1
+          ],
+          "PO-5540-e8c58c40": [
+            1
+          ],
+          "PO-9019-e8c58c40": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-caf4b820": [
+            1
+          ],
+          "PO-48813-caf4b820": [
+            1
+          ],
+          "PO-77014-caf4b820": [
+            1
+          ],
+          "PO-48820-caf4b820": [
+            1
+          ],
+          "PO-5521-caf4b820": [
+            1
+          ],
+          "PO-48901-caf4b820": [
+            1
+          ],
+          "PO-77030-caf4b820": [
+            1
+          ],
+          "PO-9004-caf4b820": [
+            1
+          ],
+          "PO-5540-caf4b820": [
+            1
+          ],
+          "PO-9019-caf4b820": [
+            1
+          ]
+        }
+      }
+    ],
+    "builtin": [
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-ac653bcb": [
+            1
+          ],
+          "PO-48813-ac653bcb": [
+            1
+          ],
+          "PO-77014-ac653bcb": [
+            1
+          ],
+          "PO-48820-ac653bcb": [
+            1
+          ],
+          "PO-5521-ac653bcb": [
+            1
+          ],
+          "PO-48901-ac653bcb": [
+            1
+          ],
+          "PO-77030-ac653bcb": [
+            1
+          ],
+          "PO-9004-ac653bcb": [
+            1
+          ],
+          "PO-5540-ac653bcb": [
+            1
+          ],
+          "PO-9019-ac653bcb": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-285bbb50": [
+            1
+          ],
+          "PO-48813-285bbb50": [
+            1
+          ],
+          "PO-77014-285bbb50": [
+            1
+          ],
+          "PO-48820-285bbb50": [
+            1
+          ],
+          "PO-5521-285bbb50": [
+            1
+          ],
+          "PO-48901-285bbb50": [
+            1
+          ],
+          "PO-77030-285bbb50": [
+            1
+          ],
+          "PO-9004-285bbb50": [
+            1
+          ],
+          "PO-5540-285bbb50": [
+            1
+          ],
+          "PO-9019-285bbb50": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-912b8720": [
+            1
+          ],
+          "PO-48813-912b8720": [
+            1
+          ],
+          "PO-77014-912b8720": [
+            1
+          ],
+          "PO-48820-912b8720": [
+            1
+          ],
+          "PO-5521-912b8720": [
+            1
+          ],
+          "PO-48901-912b8720": [
+            1
+          ],
+          "PO-77030-912b8720": [
+            1
+          ],
+          "PO-9004-912b8720": [
+            1
+          ],
+          "PO-5540-912b8720": [
+            1
+          ],
+          "PO-9019-912b8720": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-c3e749b5": [
+            1
+          ],
+          "PO-48813-c3e749b5": [
+            1
+          ],
+          "PO-77014-c3e749b5": [
+            1
+          ],
+          "PO-48820-c3e749b5": [
+            1
+          ],
+          "PO-5521-c3e749b5": [
+            1
+          ],
+          "PO-48901-c3e749b5": [
+            1
+          ],
+          "PO-77030-c3e749b5": [
+            1
+          ],
+          "PO-9004-c3e749b5": [
+            1
+          ],
+          "PO-5540-c3e749b5": [
+            1
+          ],
+          "PO-9019-c3e749b5": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-e7f9b6fe": [
+            1
+          ],
+          "PO-48813-e7f9b6fe": [
+            1
+          ],
+          "PO-77014-e7f9b6fe": [
+            1
+          ],
+          "PO-48820-e7f9b6fe": [
+            1
+          ],
+          "PO-5521-e7f9b6fe": [
+            1
+          ],
+          "PO-48901-e7f9b6fe": [
+            1
+          ],
+          "PO-77030-e7f9b6fe": [
+            1
+          ],
+          "PO-9004-e7f9b6fe": [
+            1
+          ],
+          "PO-5540-e7f9b6fe": [
+            1
+          ],
+          "PO-9019-e7f9b6fe": [
+            1
+          ]
+        }
+      }
+    ],
+    "cellaflow": [
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-79113544": [
+            1
+          ],
+          "PO-48813-79113544": [
+            1
+          ],
+          "PO-77014-79113544": [
+            1
+          ],
+          "PO-48820-79113544": [
+            1
+          ],
+          "PO-5521-79113544": [
+            1
+          ],
+          "PO-48901-79113544": [
+            1
+          ],
+          "PO-77030-79113544": [
+            1
+          ],
+          "PO-9004-79113544": [
+            1
+          ],
+          "PO-5540-79113544": [
+            1
+          ],
+          "PO-9019-79113544": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-debeac2f": [
+            1
+          ],
+          "PO-48813-debeac2f": [
+            1
+          ],
+          "PO-77014-debeac2f": [
+            1
+          ],
+          "PO-48820-debeac2f": [
+            1
+          ],
+          "PO-5521-debeac2f": [
+            1
+          ],
+          "PO-48901-debeac2f": [
+            1
+          ],
+          "PO-77030-debeac2f": [
+            1
+          ],
+          "PO-9004-debeac2f": [
+            1
+          ],
+          "PO-5540-debeac2f": [
+            1
+          ],
+          "PO-9019-debeac2f": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-830bfdc7": [
+            1
+          ],
+          "PO-48813-830bfdc7": [
+            1
+          ],
+          "PO-77014-830bfdc7": [
+            1
+          ],
+          "PO-48820-830bfdc7": [
+            1
+          ],
+          "PO-5521-830bfdc7": [
+            1
+          ],
+          "PO-48901-830bfdc7": [
+            1
+          ],
+          "PO-77030-830bfdc7": [
+            1
+          ],
+          "PO-9004-830bfdc7": [
+            1
+          ],
+          "PO-5540-830bfdc7": [
+            1
+          ],
+          "PO-9019-830bfdc7": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-671d9724": [
+            1
+          ],
+          "PO-48813-671d9724": [
+            1
+          ],
+          "PO-77014-671d9724": [
+            1
+          ],
+          "PO-48820-671d9724": [
+            1
+          ],
+          "PO-5521-671d9724": [
+            1
+          ],
+          "PO-48901-671d9724": [
+            1
+          ],
+          "PO-77030-671d9724": [
+            1
+          ],
+          "PO-9004-671d9724": [
+            1
+          ],
+          "PO-5540-671d9724": [
+            1
+          ],
+          "PO-9019-671d9724": [
+            1
+          ]
+        }
+      },
+      {
+        "duplicates": 0,
+        "missing": 0,
+        "refused": 0,
+        "reused_after": false,
+        "duplicate_commitments": 0,
+        "stray_drafts": 0,
+        "orders_per_po": {
+          "PO-48812-d1ed6f8f": [
+            1
+          ],
+          "PO-48813-d1ed6f8f": [
+            1
+          ],
+          "PO-77014-d1ed6f8f": [
+            1
+          ],
+          "PO-48820-d1ed6f8f": [
+            1
+          ],
+          "PO-5521-d1ed6f8f": [
+            1
+          ],
+          "PO-48901-d1ed6f8f": [
+            1
+          ],
+          "PO-77030-d1ed6f8f": [
+            1
+          ],
+          "PO-9004-d1ed6f8f": [
+            1
+          ],
+          "PO-5540-d1ed6f8f": [
+            1
+          ],
+          "PO-9019-d1ed6f8f": [
             1
           ]
         }

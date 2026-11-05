@@ -33,10 +33,10 @@ Order. Five runs per cell, and every cell came out the same way in all five.
 | | A. baseline | B. query-first guard | B2. ERPNext as it ships | C. Cellaflow leased write |
 | :--- | :---: | :---: | :---: | :---: |
 | control, no crash | 0/5 | 0/5 | 0/5 | 0/5 |
-| crash after the write, before any record of it | **5/5** | 0/5 | 0/5 | **5/5** |
 | crash after the record, before the job is marked done | **5/5** | 0/5 | 0/5 | 0/5 |
-| crash before the write | 0/5 | 0/5 | 0/5 | 0/5 |
 | two workers take the same inbox | **5/5** | **5/5** | 5/5 &dagger; | 0/5 |
+| crash after the write, before any record of it | **5/5** | 0/5 | 0/5 | **5/5** |
+| crash before the write | 0/5 | 0/5 | 0/5 | 0/5 |
 | the ERP commits, the answer never arrives | **5/5** | 0/5 | 0/5 | **5/5** |
 
 &dagger; Not a second order. Under concurrency ERPNext accepts both drafts and
@@ -106,6 +106,18 @@ order. This row is a gate: if it reads anything else, every other number in
 the table is a fault in the harness rather than a finding about the arms, and
 the run says so and stops.
 
+**crash after the record, before the job is marked done.** The process dies
+after the arm's own durable record exists and before the job table is updated.
+Arms A and B keep no such record, so for them this is the same instant as the
+crash-after-the-write row below, and the result is the same. Arm C has one, and
+this is the row where having it shows.
+
+**two workers take the same inbox.** Two processes, started together, each with
+its own job table, both working the same ten emails. Two replicas polling one
+mailbox is the ordinary way this arises, and it is modelled as two separate
+job tables because that is what two pods have. Nothing local to one worker can
+see the other.
+
 **crash after the write, before any record of it.** The process dies in the
 instant between ERPNext committing the order and anything at all noting that
 it did. For arms A and B that instant is before the SQLite row. For arm C it is
@@ -114,20 +126,8 @@ leased function. This is the window nothing closes, and putting the crash
 anywhere more flattering would be the easiest way to make arm C look better
 than it is.
 
-**crash after the record, before the job is marked done.** The process dies
-after the arm's own durable record exists and before the job table is updated.
-Arms A and B keep no such record, so for them this is the same instant as the
-row above and the result is the same. Arm C has one, and this is the row where
-having it shows.
-
 **crash before the write.** A control in the other direction. Nothing has
 happened yet, so a retry should simply do the work once, in every arm.
-
-**two workers take the same inbox.** Two processes, started together, each with
-its own job table, both working the same ten emails. Two replicas polling one
-mailbox is the ordinary way this arises, and it is modelled as two separate
-job tables because that is what two pods have. Nothing local to one worker can
-see the other.
 
 **the ERP commits, the answer never arrives.** ERPNext creates and submits the
 order, and the client gets a read timeout instead of the response. The worker

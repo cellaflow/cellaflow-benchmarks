@@ -55,12 +55,15 @@ class Scenario:
     two_workers: bool = False
 
 
+# Control first, because it is the gate. Then the two rows a reader of this
+# table is most likely to recognise from their own system, and only then the
+# boundary cases the other four rows bracket.
 SCENARIOS = [
     Scenario("control", "control, no crash"),
-    Scenario("in-write", "crash after the write, before any record of it", crash_at="in-write"),
     Scenario("after-write", "crash after the record, before the job is marked done", crash_at="after-write"),
-    Scenario("before-write", "crash before the write", crash_at="before-write"),
     Scenario("two-workers", "two workers take the same inbox", two_workers=True),
+    Scenario("in-write", "crash after the write, before any record of it", crash_at="in-write"),
+    Scenario("before-write", "crash before the write", crash_at="before-write"),
     Scenario("lost-response", "the ERP commits, the answer never arrives", fault="lose-response"),
 ]
 
