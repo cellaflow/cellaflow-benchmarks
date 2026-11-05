@@ -45,6 +45,9 @@ as a pass.
 
 Most directories carry a `with-cellaflow/` arm that runs the same harness with a
 lease on each irreversible operation and reports which rows move.
+[`erp-order-entry/`](erp-order-entry/) is the exception: its agent is
+constructed rather than audited, so all four of its arms live in one tree and
+are selected at run time. Its README says which lines are the leased ones.
 
 ## Two things stated up front
 

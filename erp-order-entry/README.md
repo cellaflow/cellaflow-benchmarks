@@ -99,6 +99,66 @@ not the session, not the process, not the position in the run, not the
 extracted line items. A retry in a fresh process derives the same string, and
 so does a second worker that never shared memory with the first.
 
+## How the files are arranged
+
+There is no `with-cellaflow/` directory here, and that is deliberate. The other
+benchmarks in this repository keep the leased arm in its own tree because the
+subject is somebody else's codebase and the arm has to be a separate copy of
+it. The agent here is ours and it is small, so a second copy would be four
+files that differ in one function, and the question worth answering, which is
+what exactly changes when you add a lease, would turn into a diff across two
+directories instead of a few lines you can read in one place.
+
+So all four arms are in one tree, selected at run time by `BENCH_ARM`:
+
+| file | what it is |
+| :--- | :--- |
+| `fixtures/` | the ten purchase order emails, as plain text |
+| `extract.py` | the deterministic stand-in for the model: sender to customer, a regex for the PO number, three quantity shapes |
+| `agent.py` | the agent, and **the only file that differs between the columns of the table**. The arms are three write functions and a dict that maps the four column names onto them, because B2 is the baseline agent with ERPNext's own setting left on |
+| `erp.py` | the ERPNext REST client, and the single place every injected fault lives, so the agent code is identical in all four arms |
+| `jobstate.py` | the agent's own SQLite job table, at `synchronous=FULL` |
+| `driver.py` | one worker process. The harness spawns it and kills it where the scenario says so |
+| `harness.py` | the matrix: scenarios times arms times runs, the control gate, the reset between runs, the three output tables |
+| `seed.py` | one-time ERPNext setup, run by `setup.sh`: company, customers, items, price list, API key |
+| `docker-compose.yml` | the `pwd.yml` stack at v16.53.0, plus one engine service |
+| `results.json` | the raw per-run counts behind every number in this README |
+
+### Every line of Cellaflow in this benchmark
+
+Five lines in `agent.py` and one service in `docker-compose.yml`. Nothing else
+imports it: not the harness that scores the runs, not the ERP client that
+counts the orders, not the extractor. An arm cannot be helped by anything
+outside its own write.
+
+The write itself, in `write_leased`, this time with the crash point in it:
+
+```python
+from cellaflow import tool
+
+@tool(idempotency_key=f"sales-order:{order.po_no}")
+def create(po_no: str) -> dict:
+    result = erp.create_sales_order(order)
+    _die("in-write", po_no)       # the crash point, inside the leased call
+    return result
+```
+
+and the block it runs in, in `worker`, which is the only other place the arm is
+named:
+
+```python
+if arm == "cellaflow":
+    from cellaflow import durable_tools
+    with durable_tools(session, target=ENGINE):
+        ...
+```
+
+`ENGINE` defaults to `localhost:50051` and the compose file publishes the
+engine there. The other three arms call `write_baseline` or `write_guarded`
+through the same loop, so the loop, the extraction, the job table, the crash
+points and the ERP client are shared and a difference in the table is a
+difference in how the write is guarded.
+
 ## What each row is
 
 **control, no crash.** One pass, nothing interrupts it, each email becomes one
