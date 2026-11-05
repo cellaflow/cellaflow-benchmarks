@@ -1,0 +1,13 @@
+From: ap@crestline-dairy.example
+To: sales@our-company.example
+Subject: Purchase Order PO-77014
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+Order PO-77014
+
+VLV-80      4
+
+That is all for this one.
+
+Marguerite Albo
+Crestline Dairy

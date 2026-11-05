@@ -1,0 +1,15 @@
+From: orders@northwind-fabrication.example
+To: sales@our-company.example
+Subject: Purchase Order PO-48820
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+Hello again,
+
+New order, PO-48820.
+
+Item            Qty
+PMP-114           2
+SEAL-22          30
+BRG-6204         10
+
+Ruth

@@ -1,0 +1,13 @@
+From: orders@sligo-engineering.example
+To: sales@our-company.example
+Subject: Purchase Order PO-9004
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+Purchase Order PO-9004
+
+Item            Qty
+VLV-80           12
+
+Deliver to the Sligo works.
+
+Aoife Brennan

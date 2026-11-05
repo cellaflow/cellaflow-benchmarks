@@ -41,6 +41,7 @@ as a pass.
 | [`skyvern/`](skyvern/) | [Skyvern](https://github.com/Skyvern-AI/skyvern) | v1.0.53, `d23ceb4` | Seven crash and contention scenarios. Two end correctly. |
 | [`inconvo/`](inconvo/) | [Inconvo](https://github.com/inconvoai/inconvo) | `fa63f29` | An interrupted answer costs 60% more in model calls. With leased tools, 7%. |
 | [`multi-agent/`](multi-agent/) | constructed | n/a | Two agents reach different conclusions about one refund. How the key is derived decides whether the customer is refunded once or twice. |
+| [`erp-order-entry/`](erp-order-entry/) | constructed, against real ERPNext | ERPNext v16.53.0 | An agent writing sales orders into an ERP, crashed four ways. ERPNext's own setting stops every duplicate and never tells the agent the work is done. No single guard closes the table. |
 
 Most directories carry a `with-cellaflow/` arm that runs the same harness with a
 lease on each irreversible operation and reports which rows move.
@@ -80,6 +81,7 @@ we do:
 | [`skyvern/`](skyvern/) | Python, a clone of Skyvern for its migrations, and Playwright's Chromium |
 | [`inconvo/`](inconvo/) | Node 22+ and pnpm, and a clone of Inconvo |
 | [`multi-agent/`](multi-agent/) | Node 18+ and nothing else |
+| [`erp-order-entry/`](erp-order-entry/) | Python 3.10+, and roughly 8GB free for the ERPNext stack |
 
 Each subject is cloned into the benchmark's own directory, where the harness
 looks for it by default. The `*_SRC` environment variable named in each README

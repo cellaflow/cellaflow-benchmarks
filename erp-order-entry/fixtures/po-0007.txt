@@ -1,0 +1,12 @@
+From: ap@crestline-dairy.example
+To: sales@our-company.example
+Subject: Purchase Order PO-77030
+Date: Tue, 04 Nov 2026 09:12:00 +0000
+
+Hi,
+
+Our PO-77030 covers 18 units of SEAL-22 and 3 units of VLV-80.
+
+Could you confirm the delivery week.
+
+Marguerite Albo
