@@ -274,6 +274,12 @@ that performs the side effect and removes the gap entirely. ERPNext's REST API
 does not offer one for `Sales Order`. Its PO-number check is the nearest thing
 it has, which is why arm B2 is in the table.
 
+What the other common ERPs offer here, and what they tell the caller when they
+refuse, is collected in [`../destination-guards.md`](../destination-guards.md).
+ERPNext turns out to be the exception rather than the rule: most of them have
+no guard on the customer PO number at all, and one of the seven replies to a
+repeated write with the first result rather than an error.
+
 **Where the destination is queryable by the business key, a guard gets most of
 the way.** Arm B is not a strawman and the table does not treat it as one. It
 reads the ERP before writing, and against this ERP that works, because `po_no`

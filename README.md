@@ -49,6 +49,15 @@ lease on each irreversible operation and reports which rows move.
 constructed rather than audited, so all four of its arms live in one tree and
 are selected at run time. Its README says which lines are the leased ones.
 
+## The other end of the call
+
+[`destination-guards.md`](destination-guards.md) asks what each common ERP does
+when an agent writes the same order twice: whether the API takes an idempotency
+key, whether the product refuses a repeated customer PO number, and what the
+caller is told. One row is measured, the rest is sourced reading, and the
+summary is that one destination of seven hands the caller back the first
+result. Corrections welcome, especially on the row that is empty.
+
 ## Two things stated up front
 
 **One row never closes.** Where a crash lands between an effect happening and
