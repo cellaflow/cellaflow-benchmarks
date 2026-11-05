@@ -51,10 +51,12 @@ def write_guarded(order: Order, erp: Erp) -> Dict[str, Any]:
     """Arm B. Ask the ERP whether this PO is already there, and skip if so.
 
     This is what a competent team writes first, and against this ERP it is a
-    reasonable thing to write: `po_no` is a field ERPNext indexes and filters
-    on, so the question can actually be asked. The two failures it has are
-    structural rather than sloppy. The check and the write are two separate
-    requests, so two workers can both pass the check before either writes; and
+    reasonable thing to write: `po_no` is a field the REST API will filter on,
+    so the question can actually be asked. It carries no index, so asking it
+    costs a table scan, which is also what ERPNext's own check pays. The two
+    failures it has are structural rather than sloppy. The check and the write
+    are two separate requests, so two workers can both pass the check before
+    either writes; and
     it only works at all because this particular destination happens to be
     queryable by the business key, which most of the calls an agent makes are
     not.
