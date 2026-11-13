@@ -70,7 +70,7 @@ first durable write.
 What the record buys is shrinking the window from "the entire rest of the run"
 to "the gap between the provider responding and one commit". It does not remove
 it. A benchmark claiming otherwise would be lying, and this is the same limit
-the [Cua benchmark](../../cua/) reports in its bottom row.
+the [Cua benchmark](../../cua/) reports in its `crash after an operation` row.
 
 ## What an advisory lock does, and does not, fix
 

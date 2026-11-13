@@ -12,7 +12,7 @@ turn.
   ---------------------------------------------------------------------------------
   control, no crash                       1      1       1         1      1       1
   crash after an operation, then retry    2      2       1         1      2       1
-  crash between operations, then retry    2      2       2         1      1       1
+  crash between operations, then retry    2      2       1         1      1       1
 ```
 
 Correct is `1, 1, 1` in every row.
@@ -21,7 +21,7 @@ Correct is `1, 1, 1` in every row.
 
 | what goes wrong | Cua alone | Cua + operation leases |
 | :--- | :--- | :--- |
-| crash in the gap between two operations | **all three repeated — charged twice, confirmed twice** | each done once |
+| crash in the gap between two operations | **charged twice, stock reserved twice** | each done once |
 | crash the instant the card is charged | **charged twice, stock reserved twice** | stock reserved once, **still charged twice** |
 
 One row fixed outright, one improved but not closed. The difference between them
@@ -90,3 +90,15 @@ No VM, no API key, no LLM spend.
 
 Operations are counted from `ledger.jsonl`, which the fake machine appends and
 fsyncs before returning.
+
+## Correction, 2026-11-13
+
+Until this date the Cua column of the between row read `2 2 2`, and the table
+above said Cua alone repeated all three operations and confirmed twice. The
+base arm was ignoring the crash the harness asked for, so that row was a
+finished order retried, not a crash. It now reads `2 2 1`; the
+[correction in the audit](../#correction-2026-11-13) has the detail.
+
+This arm was already crashing where it said, so its own column is unchanged.
+Rerun three times on 2026-11-13 against `ghcr.io/cellaflow/cellaflow:0.3.0`,
+with the same numbers every time.
