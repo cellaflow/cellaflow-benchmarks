@@ -26,6 +26,7 @@ from PIL import Image, ImageDraw
 
 HERE = pathlib.Path(__file__).parent
 LEDGER = HERE / "ledger.jsonl"
+DIE_BETWEEN = os.environ.get("BENCH_DIE_BETWEEN") or None
 
 # Three separately-irreversible operations, and where they are on screen.
 OPERATIONS = [
@@ -102,6 +103,12 @@ def build_computer(order_id: str, die_after_op: str | None = None) -> Dict[str, 
         record(order_id, op)
         if die_after_op == op:
             print(f"[cua] dying immediately after {op}", flush=True)
+            os._exit(137)
+        if DIE_BETWEEN == op:
+            # After the operation returned, before the next one starts. This arm
+            # records nothing between operations, so to the retry this point is
+            # indistinguishable from dying immediately after the operation.
+            print(f"[cua] dying between {op} and the next operation", flush=True)
             os._exit(137)
 
     async def get_environment() -> str:

@@ -18,15 +18,17 @@ than written in by hand, so a stale number cannot survive a re-run.
   --------------------------------------------------------------------
   control, no crash                                   1       1        1
   crash after an operation, then retry                2       2        1  <--
-  crash between operations, then retry                2       2        2  <--
+  crash between operations, then retry                2       2        1  <--
 ```
 
 The agent's job is three separately-irreversible operations: reserve stock,
 charge the card, send the confirmation. The process is killed mid-run. A
 supervisor retries the same order.
 
-**The card is charged twice in both crash rows.** Where the crash lands only
-decides how much else is repeated with it.
+**The card is charged twice in both crash rows.** The two rows come out
+identical: nothing records an operation between one and the next, so a crash
+after the charge and a crash before the confirmation leave the retry knowing
+the same thing, which is nothing.
 
 ## What each row is
 
@@ -39,9 +41,10 @@ charge lands. A second run retries the same order, which is what a worker pool
 or a supervisor does. **Correct is each operation exactly once.**
 
 **crash between operations, then retry.** The process dies in the gap after the
-charge has completed and before the confirmation starts. The retry repeats all
-three, so the confirmation goes out twice as well — the only row where every
-operation is duplicated.
+charge has completed and before the confirmation starts. The retry reserves the
+stock and charges the card again, then sends the confirmation once, because the
+first run never got to it. To Cua this is the same crash as the row above, and
+it gives the same numbers.
 
 ## Why it repeats
 
@@ -51,7 +54,8 @@ completed. Cua's trajectory capture is explicitly a debugging artifact —
 debugging"* — not resumable state. There is no checkpoint and no resume.
 
 So the new process starts with an empty history, looks at a screen that shows
-the same three buttons, and does all three again.
+the same three buttons, and does all three, repeating every one the first run
+had already done.
 
 The screen in this harness deliberately does not change when an operation
 succeeds. That is the realistic case for anything confirming out of band — an
@@ -135,3 +139,31 @@ counted as having acted.
 
 [`with-cellaflow/`](with-cellaflow/) runs this same harness with a lease on each
 irreversible operation, and reports which rows move.
+
+## Correction, 2026-11-13
+
+Until this date the table above showed the between row as `2 2 2`, and this
+page called it the only row where every operation is duplicated, with the
+confirmation sent twice. That was wrong. It was a fault in the harness, not a
+finding about Cua.
+
+`harness.py` asks for that crash by setting `BENCH_DIE_BETWEEN=charge`, but this
+arm's `checkout.py` never read the variable. The leased arm's did. So here the
+row never crashed: the first run completed the whole order, and the harness
+then retried an order that was already finished. A finished order run twice is
+`2 2 2`.
+
+`checkout.py` now reads `BENCH_DIE_BETWEEN` the way the leased arm does and
+exits at the same point, after the charge returns and before the confirmation
+starts. Rerun on 2026-11-13, three times against `cua-agent` 0.9.0 and three
+times against 0.8.4, with the same numbers every time:
+
+| row | published | rerun |
+| :--- | :--- | :--- |
+| control, no crash | `1 1 1` | `1 1 1` |
+| crash after an operation, then retry | `2 2 1` | `2 2 1` |
+| crash between operations, then retry | `2 2 2` | `2 2 1` |
+
+The finding stands: Cua alone charges the card twice in both crash rows. What
+changed is that the two crash rows now match, which is what they should do when
+nothing durable records an operation in either case.
