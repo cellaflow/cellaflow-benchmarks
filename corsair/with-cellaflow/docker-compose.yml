@@ -9,8 +9,6 @@ services:
       # explicit opt-out, so a benchmark that omits it never serves at all.
       # Fine for a local benchmark on loopback; do not carry it anywhere else.
       CELLAFLOW_ALLOW_UNAUTHENTICATED: "true"
-      CELLAFLOW_HOST: "::"
-      CELLAFLOW_DB_PATH: /data/cellaflow
     ports: ["50051:50051", "9090:9090"]
     healthcheck:
       # No wget or curl in the image; bash can open a socket. Greps for 200

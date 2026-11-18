@@ -209,8 +209,6 @@ services:
     image: ghcr.io/cellaflow/cellaflow@sha256:a6fb0484c49e4bd7df2cd9490fa1ccc6ec563855e75de7baddd379c37c4fb94d
     networks: [frappe_network]
     environment:
-      CELLAFLOW_HOST: "::"
-      CELLAFLOW_DB_PATH: /data/cellaflow
       # The engine refuses to start with neither a token nor this, so an open
       # port is always something someone chose. On a benchmark on a laptop,
       # choosing it is right.
